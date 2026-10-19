@@ -1,0 +1,17 @@
+appId: app.griit.challenge-tracker
+---
+# Build 92 chunk 11 profile open: relaunch (new process), Home, tap Profile, header shown.
+# The app logs mount → first header paint to griit.profileTrace.v1 (EXPO_PUBLIC_STARTUP_TRACE=1 builds).
+- launchApp:
+    stopApp: true
+- extendedWaitUntil:
+    visible: "^Home$"
+    timeout: 30000
+- extendedWaitUntil:
+    visible: "build92-never-shown"
+    timeout: 4000
+    optional: true
+- tapOn: "^Profile$"
+- extendedWaitUntil:
+    visible: "Edit profile"
+    timeout: 15000

@@ -6,6 +6,7 @@ import { Pressable, StyleSheet, Text, View, useWindowDimensions } from "react-na
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, { runOnJS, useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
 import { Image } from "expo-image";
+import { proofSource } from "@/lib/proof-cache-key";
 import { Check, Heart, Lock, MessageCircle, X } from "lucide-react-native";
 import { DS_V3 } from "@/lib/design-system";
 import { proofsDateLabel } from "@/lib/proofs-grid";
@@ -109,7 +110,7 @@ export function ProofViewer({
       <GestureDetector gesture={Gesture.Exclusive(media, tap)}>
         <View style={styles.stage}>
           {photo?.uri ? (
-            <Image source={{ uri: photo.uri }} style={styles.photo} contentFit="cover" />
+            <Image source={proofSource(photo.uri)} style={styles.photo} contentFit="cover" cachePolicy="memory-disk" />
           ) : (
             <View style={styles.self}>
               <View style={styles.disc}>

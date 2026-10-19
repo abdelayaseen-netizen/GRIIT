@@ -16,7 +16,11 @@ export type DiscoverPreviewTask = {
 
 export type TaskProofKind = "strava" | "camera" | "timer" | "counter" | "self";
 
-export function taskProofKind(row: TaskModelRow): TaskProofKind {
+type ProofRow = Omit<TaskModelRow, "config"> & {
+  config?: (NonNullable<TaskModelRow["config"]> & { require_strava?: boolean | null; verify?: string | null }) | null;
+};
+
+export function taskProofKind(row: ProofRow): TaskProofKind {
   const cfg = (row.config ?? {}) as Record<string, unknown>;
   if (cfg.require_strava === true || cfg.verify === "strava") return "strava";
   if (gatesFor(row).includes("camera")) return "camera";

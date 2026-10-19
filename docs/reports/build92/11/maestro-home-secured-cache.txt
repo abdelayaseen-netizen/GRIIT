@@ -1,0 +1,115 @@
+WARNING: Final field parent in class maestro.cli.command.TestCommand has been mutated reflectively by class picocli.CommandLine$Model$FieldBinding in unnamed module @43ee72e6 (file:/Users/yaseenabdela/.maestro/lib/picocli-4.6.3.jar)
+WARNING: Use --enable-final-field-mutation=ALL-UNNAMED to avoid a warning
+WARNING: Mutating final fields will be blocked in a future release unless final field mutation is enabled
+Running on GRIIT SE b92 - iOS 26.4 - 575796A4-0937-4BBD-B863-5F926C173844
+ > Flow build92-10-home-secured
+Run build92-guest-home.yaml...
+  Launch app "app.griit.challenge-tracker" with clear state... COMPLETED
+  Assert that "http://localhost:8081|Start|Continue" is visible... COMPLETED
+  Tap on (Optional) "http://localhost:8081"... COMPLETED
+  Tap on (Optional) "Not now"... WARNED
+  Tap on (Optional) "Continue"... COMPLETED
+  Run flow when "Toggle performance monitor" is visible...
+    Swipe from (50%,60%) to (50%,98%) in 400 ms... COMPLETED
+  Run flow when "Toggle performance monitor" is visible... COMPLETED
+  Assert that "Start" is visible... COMPLETED
+  Tap on "Start"... COMPLETED
+  Tap on "Fitness and gym"... COMPLETED
+  Tap on "Continue"... COMPLETED
+  Assert that "How it works" is visible... COMPLETED
+  Tap on "Continue"... COMPLETED
+  Assert that "Set this up later" is visible... COMPLETED
+  Tap on "Set this up later"... COMPLETED
+  Assert that "No reminders for now" is visible... COMPLETED
+  Tap on "No reminders for now"... COMPLETED
+  Assert that id: home-starter-card is visible... COMPLETED
+Run build92-guest-home.yaml... COMPLETED
+Open griit://challenge/e44f0001-4000-4000-8000-000000000002... COMPLETED
+Tap on (Optional) "^Open$"... WARNED
+Assert that "Join 7K Steps" is visible... COMPLETED
+Tap on "Join 7K Steps"... COMPLETED
+Assert that "Walk 7,000 steps|^Done$" is visible... COMPLETED
+Tap on (Optional) id: home-task... WARNED
+Assert that "^Done$" is visible... COMPLETED
+Tap on "^Done$"... COMPLETED
+Assert that "Post your proof" is visible... COMPLETED
+Tap on "Post to friends"... COMPLETED
+Assert that "Every task today is done.*|Day secured|Day 1 secured.*" is visible... COMPLETED
+Tap on "^Done$"... COMPLETED
+Tap on (Optional) "Not now"... COMPLETED
+Assert that "Today is secured. See you tomorrow." is visible... COMPLETED
+Take screenshot P3-17-home-secured... COMPLETED
+Assert that ".*Finish the task.*" is not visible... COMPLETED
+secured exit=0
+WARNING: Final field parent in class maestro.cli.command.TestCommand has been mutated reflectively by class picocli.CommandLine$Model$FieldBinding in unnamed module @43ee72e6 (file:/Users/yaseenabdela/.maestro/lib/picocli-4.6.3.jar)
+WARNING: Use --enable-final-field-mutation=ALL-UNNAMED to avoid a warning
+WARNING: Mutating final fields will be blocked in a future release unless final field mutation is enabled
+Running on GRIIT SE b92 - iOS 26.4 - 575796A4-0937-4BBD-B863-5F926C173844
+ > Flow build92-10-home-poll
+Assert that ".*Finish the task.*" is not visible... COMPLETED
+Assert that "Today is secured. See you tomorrow." is visible... COMPLETED
+poll 1 exit=0
+WARNING: Final field parent in class maestro.cli.command.TestCommand has been mutated reflectively by class picocli.CommandLine$Model$FieldBinding in unnamed module @43ee72e6 (file:/Users/yaseenabdela/.maestro/lib/picocli-4.6.3.jar)
+WARNING: Use --enable-final-field-mutation=ALL-UNNAMED to avoid a warning
+WARNING: Mutating final fields will be blocked in a future release unless final field mutation is enabled
+Running on GRIIT SE b92 - iOS 26.4 - 575796A4-0937-4BBD-B863-5F926C173844
+ > Flow build92-10-home-poll
+Assert that ".*Finish the task.*" is not visible... COMPLETED
+Assert that "Today is secured. See you tomorrow." is visible... COMPLETED
+poll 2 exit=0
+WARNING: Final field parent in class maestro.cli.command.TestCommand has been mutated reflectively by class picocli.CommandLine$Model$FieldBinding in unnamed module @43ee72e6 (file:/Users/yaseenabdela/.maestro/lib/picocli-4.6.3.jar)
+WARNING: Use --enable-final-field-mutation=ALL-UNNAMED to avoid a warning
+WARNING: Mutating final fields will be blocked in a future release unless final field mutation is enabled
+Running on GRIIT SE b92 - iOS 26.4 - 575796A4-0937-4BBD-B863-5F926C173844
+ > Flow build92-10-home-poll
+Assert that ".*Finish the task.*" is not visible... COMPLETED
+Assert that "Today is secured. See you tomorrow." is visible... COMPLETED
+poll 3 exit=0
+WARNING: Final field parent in class maestro.cli.command.TestCommand has been mutated reflectively by class picocli.CommandLine$Model$FieldBinding in unnamed module @43ee72e6 (file:/Users/yaseenabdela/.maestro/lib/picocli-4.6.3.jar)
+WARNING: Use --enable-final-field-mutation=ALL-UNNAMED to avoid a warning
+WARNING: Mutating final fields will be blocked in a future release unless final field mutation is enabled
+Running on GRIIT SE b92 - iOS 26.4 - 575796A4-0937-4BBD-B863-5F926C173844
+ > Flow build92-11-relaunch
+Launch app "app.griit.challenge-tracker"... COMPLETED
+Assert that "^Home$" is visible... COMPLETED
+relaunch exit=0
+WARNING: Final field parent in class maestro.cli.command.TestCommand has been mutated reflectively by class picocli.CommandLine$Model$FieldBinding in unnamed module @7f1302d6 (file:/Users/yaseenabdela/.maestro/lib/picocli-4.6.3.jar)
+WARNING: Use --enable-final-field-mutation=ALL-UNNAMED to avoid a warning
+WARNING: Mutating final fields will be blocked in a future release unless final field mutation is enabled
+Running on GRIIT SE b92 - iOS 26.4 - 575796A4-0937-4BBD-B863-5F926C173844
+ > Flow build92-10-home-poll
+Assert that ".*Finish the task.*" is not visible... COMPLETED
+Assert that "Today is secured. See you tomorrow." is visible... COMPLETED
+after-relaunch poll 1 exit=0
+WARNING: Final field parent in class maestro.cli.command.TestCommand has been mutated reflectively by class picocli.CommandLine$Model$FieldBinding in unnamed module @43ee72e6 (file:/Users/yaseenabdela/.maestro/lib/picocli-4.6.3.jar)
+WARNING: Use --enable-final-field-mutation=ALL-UNNAMED to avoid a warning
+WARNING: Mutating final fields will be blocked in a future release unless final field mutation is enabled
+Running on GRIIT SE b92 - iOS 26.4 - 575796A4-0937-4BBD-B863-5F926C173844
+ > Flow build92-10-home-poll
+Assert that ".*Finish the task.*" is not visible... COMPLETED
+Assert that "Today is secured. See you tomorrow." is visible... COMPLETED
+after-relaunch poll 2 exit=0
+WARNING: Final field parent in class maestro.cli.command.TestCommand has been mutated reflectively by class picocli.CommandLine$Model$FieldBinding in unnamed module @43ee72e6 (file:/Users/yaseenabdela/.maestro/lib/picocli-4.6.3.jar)
+WARNING: Use --enable-final-field-mutation=ALL-UNNAMED to avoid a warning
+WARNING: Mutating final fields will be blocked in a future release unless final field mutation is enabled
+Running on GRIIT SE b92 - iOS 26.4 - 575796A4-0937-4BBD-B863-5F926C173844
+ > Flow build92-10-home-poll
+Assert that ".*Finish the task.*" is not visible... COMPLETED
+Assert that "Today is secured. See you tomorrow." is visible... COMPLETED
+after-relaunch poll 3 exit=0
+WARNING: Final field parent in class maestro.cli.command.TestCommand has been mutated reflectively by class picocli.CommandLine$Model$FieldBinding in unnamed module @43ee72e6 (file:/Users/yaseenabdela/.maestro/lib/picocli-4.6.3.jar)
+WARNING: Use --enable-final-field-mutation=ALL-UNNAMED to avoid a warning
+WARNING: Mutating final fields will be blocked in a future release unless final field mutation is enabled
+Running on GRIIT SE b92 - iOS 26.4 - 575796A4-0937-4BBD-B863-5F926C173844
+ > Flow build92-10-home-poll
+Assert that ".*Finish the task.*" is not visible... COMPLETED
+Assert that "Today is secured. See you tomorrow." is visible... COMPLETED
+after-relaunch poll 4 exit=0
+WARNING: Final field parent in class maestro.cli.command.TestCommand has been mutated reflectively by class picocli.CommandLine$Model$FieldBinding in unnamed module @43ee72e6 (file:/Users/yaseenabdela/.maestro/lib/picocli-4.6.3.jar)
+WARNING: Use --enable-final-field-mutation=ALL-UNNAMED to avoid a warning
+WARNING: Mutating final fields will be blocked in a future release unless final field mutation is enabled
+Running on GRIIT SE b92 - iOS 26.4 - 575796A4-0937-4BBD-B863-5F926C173844
+ > Flow build92-10-home-poll
+Assert that ".*Finish the task.*" is not visible... COMPLETED
+Assert that "Today is secured. See you tomorrow." is visible... COMPLETED
+after-relaunch poll 5 exit=0

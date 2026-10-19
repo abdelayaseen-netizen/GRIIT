@@ -88,3 +88,14 @@ export function shouldShowAuthRedirectOverlay(input: {
 }): boolean {
   return input.loading || (input.hasSession && !input.profileChecked);
 }
+
+/**
+ * Build 92 11.2: the splash comes down once routing has settled (no loading overlay, nothing left
+ * to replace), not on a fixed timer. The layout keeps a maximum so it never stays up for long.
+ */
+export function splashMayHide(input: {
+  overlayShown: boolean;
+  action: AuthRedirectDecision["action"];
+}): boolean {
+  return !input.overlayShown && (input.action === "stay" || input.action === "retry");
+}

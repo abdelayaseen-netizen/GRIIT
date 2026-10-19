@@ -14,7 +14,7 @@ Cursor updates this file at the end of each chunk. Only Yaseen changes a status 
 | 08 | Invite, leaderboard and settings | PASSED | 354ce8ad (code 116eae9e) | Short codes in invite_tracking (no SQL). Backend deployed 41a48b0 then 116eae9. Needs Yaseen: universal links entitlement; P2-20 (Strava connected) needs a real Strava login. Report: docs/reports/build92.md |
 | 09 | First day and account | PASSED | 8d4aaab5 | Items 09.1–09.5; SE gate 5/5 after the chunk 10 deploy (dce02d8) of getStarterPack gate_time_*. Needs Yaseen: Supabase email OTP steps, then flip EMAIL_OTP. Report: docs/reports/build92.md |
 | 10 | Discover, challenge page, Home, feed, words | PASSED | 3cf82f96 (code 756b0dd2) | Items 10.1–10.5; both Maestro gates pass on SE after the deploy (3cf82f9). Needs Yaseen: Run 3 mi SQL (docs/sql/build92.sql, chunk 10.1), hidden on Discover until it runs. Report: docs/reports/build92.md |
-| 11 | Speed: app open and profile | NOT STARTED | | |
+| 11 | Speed: app open and profile | PASSED | (this commit) | Release sim medians: cold 3280 → 1459 ms, warm 2927 → 1175 ms (splash on a fixed 1.8 s timer; Home and routing waited on the network). Profile header 12–17 ms. Budget 44–47/min, 0 × 429. 11.3 server thumbnails not done (needs a deploy). Report: docs/reports/build92.md |
 | 12 | Better test agents | NOT STARTED | | |
 | 13 | Ship and overnight test | NOT STARTED | | |
 
@@ -74,3 +74,7 @@ Cursor updates this file at the end of each chunk. Only Yaseen changes a status 
 10.3 Home (one secured flag, Today is secured + n done · Show, real save reasons, retry only when it can work): done, 756b0dd2
 10.4 Feed (started fold after the first proof, not likeable, captions per tab, Discover + Invite empty): done, 756b0dd2
 10.5 Words (once per user at the first moment, freeze-earned card, words sheet behind the i): done, 756b0dd2
+11.1 Measure first (Release 16 Pro Max sim, 5 cold + 5 warm, per-phase trace, before table): done
+11.2 Biggest phases (splash on settle, Home from per-user cache then refresh, returning account routes from device record): done
+11.3 Profile and feed images (cache keyed on the storage object, tiles decoded at tile size): done; server-sized thumbnails not done (needs backend deploy)
+11.4 Request budget (5 fresh-guest runs: 44–47 in the busiest minute, 0 × 429): done

@@ -16,6 +16,7 @@ import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 import { useIsGuest } from "@/contexts/AuthGateContext";
 import { useHomeBootstrap } from "@/lib/use-home-bootstrap";
+import { traceMark } from "@/lib/startup-trace";
 import { refreshHomeBootstrap } from "@/lib/home-bootstrap-refresh";
 import { useReconcileStreakIfNeeded } from "@/lib/use-reconcile-streak";
 import { ROUTES } from "@/lib/routes";
@@ -236,7 +237,14 @@ export default function HomeScreen() {
   const [shareTodayOpen, setShareTodayOpen] = React.useState(false);
   const highlightTaskId = useTaskCompleteFlash();
 
-  const bootstrap = useHomeBootstrap(isGuest ? undefined : user?.id);
+  const bootstrap = useHomeBootstrap(isGuest ? undefined : user?.id, { fromCache: true });
+  useEffect(() => {
+    traceMark("home_mount");
+  }, []);
+  const homeHasData = !!bootstrap.data;
+  useEffect(() => {
+    if (homeHasData) traceMark("home_data");
+  }, [homeHasData]);
   const recordQuery = useQuery({
     queryKey: ["profiles", "getRecord", user?.id ?? ""],
     queryFn: () =>
@@ -284,7 +292,7 @@ export default function HomeScreen() {
 
   const recon = useReconcileStreakIfNeeded({
     enabled: !isGuest && !!user?.id,
-    ready: bootstrap.isSuccess,
+    ready: bootstrap.isSuccess && !bootstrap.isPlaceholderData,
     userId: user?.id,
     stats: bootstrap.data?.stats ?? stats ?? null,
     securedDateKeys: bootstrap.data?.securedDateKeys ?? null,

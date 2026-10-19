@@ -1,0 +1,45 @@
+WARNING: Final field parent in class maestro.cli.command.TestCommand has been mutated reflectively by class picocli.CommandLine$Model$FieldBinding in unnamed module @7f1302d6 (file:/Users/yaseenabdela/.maestro/lib/picocli-4.6.3.jar)
+WARNING: Use --enable-final-field-mutation=ALL-UNNAMED to avoid a warning
+WARNING: Mutating final fields will be blocked in a future release unless final field mutation is enabled
+Running on GRIIT SE b92 - iOS 26.4 - 575796A4-0937-4BBD-B863-5F926C173844
+ > Flow build92-11-budget
+Launch app "app.griit.challenge-tracker" with clear state... COMPLETED
+Assert that "http://localhost:8081|Start|Continue" is visible... COMPLETED
+Tap on (Optional) "http://localhost:8081"... COMPLETED
+Tap on (Optional) "Not now"... WARNED
+Tap on (Optional) "Continue"... COMPLETED
+Run flow when "Toggle performance monitor" is visible...
+  Swipe from (50%,60%) to (50%,98%) in 400 ms... COMPLETED
+Run flow when "Toggle performance monitor" is visible... COMPLETED
+Assert that "Start" is visible... COMPLETED
+Tap on "Start"... COMPLETED
+Assert that "Faith and prayer" is visible... COMPLETED
+Tap on "Faith and prayer"... COMPLETED
+Tap on "Continue"... COMPLETED
+Assert that "How it works" is visible... COMPLETED
+Tap on "Continue"... COMPLETED
+Assert that "Start here" is visible... COMPLETED
+Assert that id: start-here-join-.* is visible... COMPLETED
+Tap on id: start-here-join-.*, Index: 0... COMPLETED
+Assert that "You’re in. Day 1 is today." is visible... COMPLETED
+Wait for animation to end within 1500 ms... COMPLETED
+Assert that "^Done$|Done without photo" is visible... COMPLETED
+Tap on "^Done$|Done without photo"... COMPLETED
+Assert that "Post your proof" is visible... COMPLETED
+Tap on "Post to friends"... COMPLETED
+Assert that "Every task today is done.*|Day 1 secured.*|Day secured.*" is visible... COMPLETED
+Tap on "^Done$"... COMPLETED
+Assert that (Optional) "Not now|Save your challenge.*" is visible... COMPLETED
+Tap on (Optional) "Not now"... COMPLETED
+Assert that "^Home$" is visible... COMPLETED
+Assert that (Optional) "build92-never-shown" is visible... WARNED
+Tap on "^Profile$"... COMPLETED
+Assert that "Edit profile|Save your progress|Settings" is visible... COMPLETED
+Tap on "^Discover$"... COMPLETED
+Assert that "Featured" is visible... COMPLETED
+Tap on "^Activity$"... COMPLETED
+Assert that (Optional) "build92-never-shown" is visible... WARNED
+Launch app "app.griit.challenge-tracker"... COMPLETED
+Assert that "^Home$" is visible... COMPLETED
+Assert that (Optional) "build92-never-shown" is visible... WARNED
+exit=0

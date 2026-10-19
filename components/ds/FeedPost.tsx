@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Dimensions, FlatList, Pressable, StyleSheet, Text, View } from "react-native";
 import { Image } from "expo-image";
+import { proofSource } from "@/lib/proof-cache-key";
 import { Camera, Heart, MessageCircle, MoreHorizontal, Share } from "lucide-react-native";
 import { DS_V3 } from "@/lib/design-system";
 import Avatar from "@/components/ds/Avatar";
@@ -56,7 +57,7 @@ export function PhotoPost(p: PhotoPostProps) {
           showsHorizontalScrollIndicator={false}
           onMomentumScrollEnd={(e) => setI(Math.round(e.nativeEvent.contentOffset.x / W))}
           renderItem={({ item }) => (
-            <Image source={{ uri: item.uri }} style={{ width: W, height: H }} contentFit="cover" />
+            <Image source={proofSource(item.uri)} style={{ width: W, height: H }} contentFit="cover" cachePolicy="memory-disk" />
           )}
         />
         <View style={styles.sealPos}><CameraSeal /></View>

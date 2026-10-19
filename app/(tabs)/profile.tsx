@@ -51,6 +51,7 @@ import { GriitFade } from "@/components/profile-v2/GriitFade";
 import { todayTaskCounts, type CountableEnrollment } from "@/lib/today-counts";
 import { useProfileHeaderCache } from "@/lib/profile-header-cache";
 import { recordCountsFromRecord } from "@/lib/profile-record";
+import { traceProfileOpen } from "@/lib/startup-trace";
 import {
   joinedBioLine,
   nextUnearnedBadge,
@@ -87,9 +88,10 @@ export default function ProfileScreen() {
   const mountedAt = useRef(Date.now());
   const headerLogged = useRef(false);
   const logHeaderVisible = useCallback((source: "cache" | "live") => {
-    if (headerLogged.current || !__DEV__) return;
+    if (headerLogged.current) return;
     headerLogged.current = true;
-    console.log(`[b92-07] profile header visible after ${Date.now() - mountedAt.current} ms (${source})`);
+    void traceProfileOpen(Date.now() - mountedAt.current, source);
+    if (__DEV__) console.log(`[b92-07] profile header visible after ${Date.now() - mountedAt.current} ms (${source})`);
   }, []);
 
   const recordQuery = useQuery({

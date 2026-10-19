@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { FlatList, StyleSheet, Text, useWindowDimensions, View } from "react-native";
 import { Image } from "expo-image";
+import { proofSource } from "@/lib/proof-cache-key";
 import { DS_V3 } from "@/lib/design-system";
 import Button from "@/components/ds/Button";
 import {
@@ -119,7 +120,7 @@ export function DayViewer({
               </View>
             ) : (
               <Image
-                source={{ uri: row.uri }}
+                source={proofSource(row.uri)}
                 style={{
                   width: photoWidth,
                   height: photoHeight,

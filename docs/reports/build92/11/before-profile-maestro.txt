@@ -1,0 +1,78 @@
+WARNING: Final field parent in class maestro.cli.command.TestCommand has been mutated reflectively by class picocli.CommandLine$Model$FieldBinding in unnamed module @43ee72e6 (file:/Users/yaseenabdela/.maestro/lib/picocli-4.6.3.jar)
+WARNING: Use --enable-final-field-mutation=ALL-UNNAMED to avoid a warning
+WARNING: Mutating final fields will be blocked in a future release unless final field mutation is enabled
+Running on GRIIT 16 Pro Max b92 - iOS 26.4 - B6CC0160-9C9F-4D0B-840D-70D790EF7FFD
+ > Flow build92-11-profile-open
+Launch app "app.griit.challenge-tracker"... COMPLETED
+Assert that "^Home$" is visible... COMPLETED
+Assert that (Optional) "build92-never-shown" is visible... WARNED
+Tap on "^Profile$"... COMPLETED
+Assert that "Edit profile" is visible... COMPLETED
+run 1 exit=0
+WARNING: Final field parent in class maestro.cli.command.TestCommand has been mutated reflectively by class picocli.CommandLine$Model$FieldBinding in unnamed module @43ee72e6 (file:/Users/yaseenabdela/.maestro/lib/picocli-4.6.3.jar)
+WARNING: Use --enable-final-field-mutation=ALL-UNNAMED to avoid a warning
+WARNING: Mutating final fields will be blocked in a future release unless final field mutation is enabled
+Running on GRIIT 16 Pro Max b92 - iOS 26.4 - B6CC0160-9C9F-4D0B-840D-70D790EF7FFD
+ > Flow build92-11-profile-open
+Launch app "app.griit.challenge-tracker"... COMPLETED
+Assert that "^Home$" is visible... COMPLETED
+Assert that (Optional) "build92-never-shown" is visible... WARNED
+Tap on "^Profile$"... COMPLETED
+Assert that "Edit profile" is visible... COMPLETED
+run 2 exit=0
+WARNING: Final field parent in class maestro.cli.command.TestCommand has been mutated reflectively by class picocli.CommandLine$Model$FieldBinding in unnamed module @43ee72e6 (file:/Users/yaseenabdela/.maestro/lib/picocli-4.6.3.jar)
+WARNING: Use --enable-final-field-mutation=ALL-UNNAMED to avoid a warning
+WARNING: Mutating final fields will be blocked in a future release unless final field mutation is enabled
+Running on GRIIT 16 Pro Max b92 - iOS 26.4 - B6CC0160-9C9F-4D0B-840D-70D790EF7FFD
+ > Flow build92-11-profile-open
+Launch app "app.griit.challenge-tracker"... COMPLETED
+Assert that "^Home$" is visible... COMPLETED
+Assert that (Optional) "build92-never-shown" is visible... WARNED
+Tap on "^Profile$"... COMPLETED
+Assert that "Edit profile" is visible... FAILED
+
+Assertion is false: "Edit profile" is visible
+
+Assertion '"Edit profile" is visible' failed. Check the UI hierarchy in debug artifacts to verify the element state and properties.
+
+Possible causes:
+- Element selector may be incorrect - check if there are similar elements with slightly different names/properties.
+- Element may be temporarily unavailable due to loading state
+- This could be a real regression that needs to be addressed
+
+==== Debug output (logs & screenshots) ====
+
+/Users/yaseenabdela/.maestro/tests/2026-10-19_013130
+WARNING: Final field parent in class maestro.cli.command.TestCommand has been mutated reflectively by class picocli.CommandLine$Model$FieldBinding in unnamed module @43ee72e6 (file:/Users/yaseenabdela/.maestro/lib/picocli-4.6.3.jar)
+WARNING: Use --enable-final-field-mutation=ALL-UNNAMED to avoid a warning
+WARNING: Mutating final fields will be blocked in a future release unless final field mutation is enabled
+Running on GRIIT 16 Pro Max b92 - iOS 26.4 - B6CC0160-9C9F-4D0B-840D-70D790EF7FFD
+ > Flow build92-11-profile-open
+Launch app "app.griit.challenge-tracker"... COMPLETED
+Assert that "^Home$" is visible... COMPLETED
+Assert that (Optional) "build92-never-shown" is visible... WARNED
+Tap on "^Profile$"... COMPLETED
+Assert that "Edit profile" is visible... COMPLETED
+run 3 done
+WARNING: Final field parent in class maestro.cli.command.TestCommand has been mutated reflectively by class picocli.CommandLine$Model$FieldBinding in unnamed module @43ee72e6 (file:/Users/yaseenabdela/.maestro/lib/picocli-4.6.3.jar)
+WARNING: Use --enable-final-field-mutation=ALL-UNNAMED to avoid a warning
+WARNING: Mutating final fields will be blocked in a future release unless final field mutation is enabled
+Running on GRIIT 16 Pro Max b92 - iOS 26.4 - B6CC0160-9C9F-4D0B-840D-70D790EF7FFD
+ > Flow build92-11-profile-open
+Launch app "app.griit.challenge-tracker"... COMPLETED
+Assert that "^Home$" is visible... COMPLETED
+Assert that (Optional) "build92-never-shown" is visible... WARNED
+Tap on "^Profile$"... COMPLETED
+Assert that "Edit profile" is visible... COMPLETED
+run 4 done
+WARNING: Final field parent in class maestro.cli.command.TestCommand has been mutated reflectively by class picocli.CommandLine$Model$FieldBinding in unnamed module @43ee72e6 (file:/Users/yaseenabdela/.maestro/lib/picocli-4.6.3.jar)
+WARNING: Use --enable-final-field-mutation=ALL-UNNAMED to avoid a warning
+WARNING: Mutating final fields will be blocked in a future release unless final field mutation is enabled
+Running on GRIIT 16 Pro Max b92 - iOS 26.4 - B6CC0160-9C9F-4D0B-840D-70D790EF7FFD
+ > Flow build92-11-profile-open
+Launch app "app.griit.challenge-tracker"... COMPLETED
+Assert that "^Home$" is visible... COMPLETED
+Assert that (Optional) "build92-never-shown" is visible... WARNED
+Tap on "^Profile$"... COMPLETED
+Assert that "Edit profile" is visible... COMPLETED
+run 5 done

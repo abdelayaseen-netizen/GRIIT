@@ -16,6 +16,7 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Image } from "expo-image";
+import { proofSource } from "@/lib/proof-cache-key";
 import { Heart, MessageCircle, MoreHorizontal } from "lucide-react-native";
 import { GlassTopBar, TOP_BAR_ROW_HEIGHT } from "@/components/ds/glass";
 import { DS_V3 } from "@/lib/design-system";
@@ -250,7 +251,7 @@ const PostCard = memo(function PostCard({
 function PostPhoto({ uri, photoW, label }: { uri: string; photoW: number; label: string }) {
   return (
     <Image
-      source={{ uri }}
+      source={proofSource(uri)}
       recyclingKey={uri}
       style={[styles.photo, { width: photoW, height: photoW }]}
       contentFit="cover"

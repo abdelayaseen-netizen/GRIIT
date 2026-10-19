@@ -4,6 +4,7 @@
 import React, { useEffect, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Image } from "expo-image";
+import { proofSource } from "@/lib/proof-cache-key";
 import { Camera, Lock } from "lucide-react-native";
 import { DS_V3 } from "@/lib/design-system";
 import {
@@ -71,10 +72,11 @@ function ProofTile({
         </View>
       ) : (
         <Image
-          source={{ uri: item.uri }}
+          source={proofSource(item.uri)}
           style={styles.img}
           contentFit="cover"
           cachePolicy="memory-disk"
+          allowDownscaling
           onError={() => setFailed(true)}
         />
       )}

@@ -1,0 +1,20 @@
+appId: app.griit.challenge-tracker
+---
+# Build 92 chunk 11 setup: the measured user has one active challenge (7K Steps), like a returning user.
+- launchApp:
+    permissions:
+      notifications: deny
+      camera: deny
+- extendedWaitUntil:
+    visible: "^Today$|^Home$"
+    timeout: 30000
+- openLink: "griit://challenge/e44f0001-4000-4000-8000-000000000002"
+- extendedWaitUntil:
+    visible: "Join .*|Start today’s task"
+    timeout: 20000
+- tapOn:
+    text: "Join .*"
+    optional: true
+- extendedWaitUntil:
+    visible: "Start today’s task|Walk 7,000 steps|^Done$"
+    timeout: 20000

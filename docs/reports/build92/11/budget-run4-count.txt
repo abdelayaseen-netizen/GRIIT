@@ -1,0 +1,75 @@
+trpc requests total=47 statuses={200: 47} busiest_minute=47 starting 05:53:51.003
+    4 home.bootstrap
+    3 notifications.getReminderSettings
+    3 challenges.finalizeEnded
+    3 challenges.listUnseenEndings
+    3 notifications.getAll
+    2 profiles.ensure
+    2 profiles.validateSubscription
+    2 profiles.getFollowing
+    2 starterTask.expire
+    2 starterTask.get
+    2 feed.todayPosters
+    2 profiles.getRecord
+    2 feed.getLiveFeed
+    2 feed.getComments
+    1 challenges.getStarterPack
+    1 profiles.update
+    1 challenges.join
+    1 checkins.complete
+    1 profiles.getFollowCounts
+    1 feed.getStreakAtRisk
+    1 challenges.getDiscoverFeatured
+    1 challenges.featuredCatalogIds
+    1 profiles.getSecuredDateKeys
+    1 challenges.listMyActive
+    1 profiles.suggested
+    1 challenges.getRecommended
+    1 feed.getTrending
+   05:53:51.003 200 GET notifications.getReminderSettings
+   05:53:51.008 200 POST challenges.finalizeEnded
+   05:53:51.427 200 GET challenges.listUnseenEndings
+   05:54:04.078 200 GET challenges.getStarterPack
+   05:54:05.547 200 POST challenges.finalizeEnded
+   05:54:05.721 200 POST profiles.ensure
+   05:54:06.009 200 POST profiles.update
+   05:54:06.083 200 GET home.bootstrap
+   05:54:06.328 200 GET notifications.getReminderSettings
+   05:54:06.643 200 POST profiles.validateSubscription
+   05:54:07.641 200 POST challenges.join
+   05:54:08.442 200 GET home.bootstrap
+   05:54:13.761 200 POST checkins.complete
+   05:54:14.824 200 GET home.bootstrap
+   05:54:16.018 200 GET challenges.listUnseenEndings
+   05:54:16.020 200 GET profiles.getFollowing
+   05:54:16.041 200 POST starterTask.expire
+   05:54:17.030 200 GET starterTask.get
+   05:54:17.031 200 GET notifications.getAll
+   05:54:17.184 200 GET feed.todayPosters
+   05:54:17.196 200 GET profiles.getRecord
+   05:54:18.374 200 GET feed.getLiveFeed
+   05:54:18.988 200 GET feed.getComments
+   05:54:23.457 200 GET profiles.getFollowCounts
+   05:54:24.246 200 GET feed.getStreakAtRisk
+   05:54:24.292 200 GET challenges.getDiscoverFeatured
+   05:54:24.349 200 GET challenges.featuredCatalogIds
+   05:54:24.390 200 GET profiles.getSecuredDateKeys
+   05:54:24.474 200 GET challenges.listMyActive
+   05:54:24.703 200 GET profiles.suggested
+   05:54:24.838 200 GET notifications.getAll
+   05:54:24.840 200 GET challenges.getRecommended
+   05:54:24.949 200 GET feed.getTrending
+   05:54:34.354 200 GET profiles.getFollowing
+   05:54:34.362 200 POST starterTask.expire
+   05:54:34.374 200 POST profiles.ensure
+   05:54:34.646 200 POST challenges.finalizeEnded
+   05:54:34.660 200 GET notifications.getAll
+   05:54:34.845 200 GET starterTask.get
+   05:54:35.019 200 GET challenges.listUnseenEndings
+   05:54:35.019 200 GET feed.todayPosters
+   05:54:35.167 200 GET profiles.getRecord
+   05:54:35.578 200 GET home.bootstrap
+   05:54:35.863 200 GET notifications.getReminderSettings
+   05:54:35.981 200 POST profiles.validateSubscription
+   05:54:36.151 200 GET feed.getLiveFeed
+   05:54:36.829 200 GET feed.getComments

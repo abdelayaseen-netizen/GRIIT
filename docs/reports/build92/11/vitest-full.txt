@@ -1,0 +1,2230 @@
+[33mThe CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.[39m
+
+ RUN  v2.1.9 /Users/yaseenabdela/Developer/GRIIT
+
+ ✓ lib/task-flow-state.test.ts (36 tests) 16ms
+ ✓ lib/home-proof-card.test.ts (20 tests) 19ms
+ ✓ lib/stickers-b92.test.ts (15 tests) 12ms
+ ✓ lib/anon-auth.test.ts (17 tests) 57ms
+ ✓ lib/build90-friend-loop.test.ts (24 tests) 19ms
+ ✓ lib/profile-v2-record.test.ts (21 tests) 17ms
+ ✓ lib/build90-posting.test.ts (24 tests) 23ms
+ ✓ lib/onboarding-v2-routing.test.ts (35 tests) 5ms
+ ✓ lib/active-challenge-ui.test.ts (18 tests) 16ms
+{"level":"info","time":"2026-10-19T05:56:30.312Z","pid":30882,"hostname":"Yaseens-MacBook-Pro.local","msg":"completed","userId":"11111111-1111-4111-8111-111111111111","taskId":"cccccccc-cccc-4ccc-8ccc-cccccccccccc","activeChallengeId":"aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa","dateKey":"2026-10-17","daySecured":false,"secureSkipped":"required_open","msg":"strava-webhook"}
+{"level":"info","time":"2026-10-19T05:56:30.314Z","pid":30882,"hostname":"Yaseens-MacBook-Pro.local","msg":"completed","userId":"11111111-1111-4111-8111-111111111111","taskId":"cccccccc-cccc-4ccc-8ccc-cccccccccccc","activeChallengeId":"aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa","dateKey":"2026-10-17","daySecured":true,"msg":"strava-webhook"}
+{"level":"info","time":"2026-10-19T05:56:30.314Z","pid":30882,"hostname":"Yaseens-MacBook-Pro.local","msg":"repeat activity","activityId":"987654321","msg":"strava-webhook"}
+{"level":"info","time":"2026-10-19T05:56:30.315Z","pid":30882,"hostname":"Yaseens-MacBook-Pro.local","msg":"completed","userId":"11111111-1111-4111-8111-111111111111","taskId":"cccccccc-cccc-4ccc-8ccc-cccccccccccc","activeChallengeId":"aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa","dateKey":"2026-10-17","daySecured":false,"secureSkipped":"required_open","msg":"strava-webhook"}
+{"level":"info","time":"2026-10-19T05:56:30.315Z","pid":30882,"hostname":"Yaseens-MacBook-Pro.local","msg":"repeat activity","activityId":"987654321","msg":"strava-webhook"}
+{"level":"info","time":"2026-10-19T05:56:30.315Z","pid":30882,"hostname":"Yaseens-MacBook-Pro.local","msg":"no matching task","userId":"11111111-1111-4111-8111-111111111111","activityId":"1","dateKey":"2026-10-17","type":"Walk","msg":"strava-webhook"}
+{"level":"info","time":"2026-10-19T05:56:30.315Z","pid":30882,"hostname":"Yaseens-MacBook-Pro.local","msg":"no matching task","userId":"11111111-1111-4111-8111-111111111111","activityId":"987654321","dateKey":"2026-10-17","type":"Run","msg":"strava-webhook"}
+{"level":"info","time":"2026-10-19T05:56:30.315Z","pid":30882,"hostname":"Yaseens-MacBook-Pro.local","msg":"no matching task","userId":"11111111-1111-4111-8111-111111111111","activityId":"555","dateKey":"2026-10-17","type":"Run","msg":"strava-webhook"}
+{"level":"info","time":"2026-10-19T05:56:30.317Z","pid":30882,"hostname":"Yaseens-MacBook-Pro.local","msg":"secure skipped: secure_day_for_user missing","userId":"11111111-1111-4111-8111-111111111111","activeChallengeId":"aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa","msg":"strava-webhook"}
+{"level":"info","time":"2026-10-19T05:56:30.318Z","pid":30882,"hostname":"Yaseens-MacBook-Pro.local","msg":"completed","userId":"11111111-1111-4111-8111-111111111111","taskId":"cccccccc-cccc-4ccc-8ccc-cccccccccccc","activeChallengeId":"aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa","dateKey":"2026-10-17","daySecured":false,"secureSkipped":"rpc_missing","msg":"strava-webhook"}
+{"level":"info","time":"2026-10-19T05:56:30.318Z","pid":30882,"hostname":"Yaseens-MacBook-Pro.local","msg":"completed","userId":"11111111-1111-4111-8111-111111111111","taskId":"cccccccc-cccc-4ccc-8ccc-cccccccccccc","activeChallengeId":"aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa","dateKey":"2026-10-16","daySecured":false,"secureSkipped":"not_today","msg":"strava-webhook"}
+ ✓ backend/lib/strava-webhook.test.ts (20 tests) 22ms
+ ✓ lib/build90-links-numbers.test.ts (10 tests) 22ms
+{"level":"warn","time":"2026-10-19T05:56:30.361Z","pid":30933,"hostname":"Yaseens-MacBook-Pro.local","userId":"10556c76-3c37-4204-8915-fc7fd3b16a59","path":"00000000-0000-4000-8000-000000000099/secret.jpg","msg":"[proof-image] drop unowned proof write"}
+{"level":"warn","time":"2026-10-19T05:56:30.361Z","pid":30933,"hostname":"Yaseens-MacBook-Pro.local","userId":"10556c76-3c37-4204-8915-fc7fd3b16a59","path":"00000000-0000-4000-8000-000000000099/secret.jpg","msg":"[proof-image] drop unowned proof write"}
+{"level":"warn","time":"2026-10-19T05:56:30.361Z","pid":30933,"hostname":"Yaseens-MacBook-Pro.local","userId":"10556c76-3c37-4204-8915-fc7fd3b16a59","msg":"[proof-image] drop file:// proof write"}
+ ✓ backend/lib/proof-image.test.ts (14 tests) 10ms
+ ✓ lib/add-task-draft.test.ts (15 tests) 6ms
+ ✓ backend/lib/user-stats.test.ts (17 tests) 10ms
+stderr | backend/lib/finalize-ended.test.ts > applyFinalizeEnded > non-duplicate insert error does not throw and leaves status completed
+[finalizeEnded] event insert failed { code: '40001' }
+
+{"level":"info","time":"2026-10-19T05:56:30.468Z","pid":30875,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"getFreezeStatus","userId":"11111111-1111-4111-8111-111111111111","durationMs":0,"msg":"trpc getFreezeStatus ok 0ms"}
+{"level":"info","time":"2026-10-19T05:56:30.469Z","pid":30875,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"getFreezeStatus","userId":"11111111-1111-4111-8111-111111111111","durationMs":0,"msg":"trpc getFreezeStatus ok 0ms"}
+{"level":"info","time":"2026-10-19T05:56:30.469Z","pid":30875,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"getFreezeStatus","userId":"11111111-1111-4111-8111-111111111111","durationMs":0,"msg":"trpc getFreezeStatus ok 0ms"}
+{"level":"info","time":"2026-10-19T05:56:30.470Z","pid":30875,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"getFreezeStatus","userId":"11111111-1111-4111-8111-111111111111","durationMs":0,"msg":"trpc getFreezeStatus ok 0ms"}
+{"level":"info","time":"2026-10-19T05:56:30.470Z","pid":30875,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"getFreezeStatus","userId":"11111111-1111-4111-8111-111111111111","durationMs":0,"errorCode":"INTERNAL_SERVER_ERROR","msg":"trpc getFreezeStatus INTERNAL_SERVER_ERROR 0ms"}
+{"level":"error","time":"2026-10-19T05:56:30.470Z","pid":30875,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"getFreezeStatus","userId":"11111111-1111-4111-8111-111111111111","code":"INTERNAL_SERVER_ERROR","message":"Failed to load freeze status.","ts":"2026-10-19T05:56:30.470Z","msg":"trpc:error"}
+{"level":"info","time":"2026-09-14T15:00:00.000Z","pid":30875,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"useFreeze","userId":"11111111-1111-4111-8111-111111111111","durationMs":0,"msg":"trpc useFreeze ok 0ms"}
+{"level":"info","time":"2026-09-14T15:00:00.000Z","pid":30875,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"useFreeze","userId":"11111111-1111-4111-8111-111111111111","durationMs":0,"errorCode":"BAD_REQUEST","msg":"trpc useFreeze BAD_REQUEST 0ms"}
+{"level":"error","time":"2026-09-14T15:00:00.000Z","pid":30875,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"useFreeze","userId":"11111111-1111-4111-8111-111111111111","code":"BAD_REQUEST","message":"Strict challenges do not use freezes.","ts":"2026-09-14T15:00:00.000Z","msg":"trpc:error"}
+{"level":"info","time":"2026-09-14T15:00:00.000Z","pid":30875,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"useFreeze","userId":"11111111-1111-4111-8111-111111111111","durationMs":0,"msg":"trpc useFreeze ok 0ms"}
+{"level":"info","time":"2026-09-14T15:00:00.000Z","pid":30875,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"useFreeze","userId":"11111111-1111-4111-8111-111111111111","durationMs":0,"msg":"trpc useFreeze ok 0ms"}
+{"level":"info","time":"2026-09-14T15:00:00.000Z","pid":30875,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"useFreeze","userId":"11111111-1111-4111-8111-111111111111","durationMs":0,"msg":"trpc useFreeze ok 0ms"}
+{"level":"info","time":"2026-09-15T15:00:00.000Z","pid":30875,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"useFreeze","userId":"11111111-1111-4111-8111-111111111111","durationMs":0,"msg":"trpc useFreeze ok 0ms"}
+{"level":"info","time":"2026-09-14T15:00:00.000Z","pid":30875,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"useFreeze","userId":"11111111-1111-4111-8111-111111111111","durationMs":0,"errorCode":"FORBIDDEN","msg":"trpc useFreeze FORBIDDEN 0ms"}
+{"level":"error","time":"2026-09-14T15:00:00.000Z","pid":30875,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"useFreeze","userId":"11111111-1111-4111-8111-111111111111","code":"FORBIDDEN","message":"No freezes left. You earn one at each 7-day streak.","ts":"2026-09-14T15:00:00.000Z","msg":"trpc:error"}
+{"level":"info","time":"2026-09-17T15:00:00.000Z","pid":30875,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"useFreeze","userId":"11111111-1111-4111-8111-111111111111","durationMs":0,"msg":"trpc useFreeze ok 0ms"}
+{"level":"info","time":"2026-09-17T15:00:00.000Z","pid":30875,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"useFreeze","userId":"11111111-1111-4111-8111-111111111111","durationMs":0,"errorCode":"BAD_REQUEST","msg":"trpc useFreeze BAD_REQUEST 0ms"}
+{"level":"error","time":"2026-09-17T15:00:00.000Z","pid":30875,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"useFreeze","userId":"11111111-1111-4111-8111-111111111111","code":"BAD_REQUEST","message":"No streak to restore.","ts":"2026-09-17T15:00:00.000Z","msg":"trpc:error"}
+{"level":"info","time":"2026-09-14T15:00:00.000Z","pid":30875,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"useFreeze","userId":"11111111-1111-4111-8111-111111111111","durationMs":0,"errorCode":"INTERNAL_SERVER_ERROR","msg":"trpc useFreeze INTERNAL_SERVER_ERROR 0ms"}
+ ✓ backend/trpc/routes/streaks.test.ts (21 tests) 26ms
+{"level":"info","time":"2026-09-14T15:00:00.000Z","pid":30876,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"getStats","userId":"11111111-1111-4111-8111-111111111111","durationMs":0,"msg":"trpc getStats ok 0ms"}
+ ✓ lib/build90-words.test.ts (29 tests) 24ms
+{"level":"info","time":"2026-09-14T15:00:00.000Z","pid":30876,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"getStats","userId":"11111111-1111-4111-8111-111111111111","durationMs":0,"msg":"trpc getStats ok 0ms"}
+{"level":"info","time":"2026-09-14T15:00:00.000Z","pid":30876,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"getStats","userId":"11111111-1111-4111-8111-111111111111","durationMs":0,"msg":"trpc getStats ok 0ms"}
+{"level":"info","time":"2026-09-14T15:00:00.000Z","pid":30876,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"getStats","userId":"11111111-1111-4111-8111-111111111111","durationMs":0,"msg":"trpc getStats ok 0ms"}
+{"level":"info","time":"2026-09-14T15:00:00.000Z","pid":30876,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"getStats","userId":"11111111-1111-4111-8111-111111111111","durationMs":0,"msg":"trpc getStats ok 0ms"}
+{"level":"info","time":"2026-09-14T15:00:00.000Z","pid":30876,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"getStats","userId":"11111111-1111-4111-8111-111111111111","durationMs":0,"msg":"trpc getStats ok 0ms"}
+{"level":"info","time":"2026-09-14T15:00:00.000Z","pid":30876,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"getStats","userId":"11111111-1111-4111-8111-111111111111","durationMs":0,"msg":"trpc getStats ok 0ms"}
+{"level":"info","time":"2026-09-14T15:00:00.000Z","pid":30876,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"getStats","userId":"11111111-1111-4111-8111-111111111111","durationMs":0,"msg":"trpc getStats ok 0ms"}
+{"level":"info","time":"2026-10-19T05:56:30.530Z","pid":30876,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"getStats","userId":"11111111-1111-4111-8111-111111111111","durationMs":1,"errorCode":"INTERNAL_SERVER_ERROR","msg":"trpc getStats INTERNAL_SERVER_ERROR 1ms"}
+{"level":"error","time":"2026-10-19T05:56:30.530Z","pid":30876,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"getStats","userId":"11111111-1111-4111-8111-111111111111","code":"INTERNAL_SERVER_ERROR","message":"Failed to load profile.","ts":"2026-10-19T05:56:30.530Z","msg":"trpc:error"}
+{"level":"info","time":"2026-09-14T15:00:00.000Z","pid":30876,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"reconcileStreak","userId":"11111111-1111-4111-8111-111111111111","durationMs":0,"msg":"trpc reconcileStreak ok 0ms"}
+{"level":"info","time":"2026-09-14T15:00:00.000Z","pid":30876,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"reconcileStreak","userId":"11111111-1111-4111-8111-111111111111","durationMs":0,"msg":"trpc reconcileStreak ok 0ms"}
+{"level":"info","time":"2026-09-14T15:00:00.000Z","pid":30876,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"reconcileStreak","userId":"11111111-1111-4111-8111-111111111111","durationMs":0,"msg":"trpc reconcileStreak ok 0ms"}
+{"level":"info","time":"2026-09-14T15:00:00.000Z","pid":30876,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"reconcileStreak","userId":"11111111-1111-4111-8111-111111111111","durationMs":0,"msg":"trpc reconcileStreak ok 0ms"}
+{"level":"info","time":"2026-09-14T15:00:00.000Z","pid":30876,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"reconcileStreak","userId":"11111111-1111-4111-8111-111111111111","durationMs":0,"msg":"trpc reconcileStreak ok 0ms"}
+{"level":"info","time":"2026-09-14T15:00:00.000Z","pid":30876,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"reconcileStreak","userId":"11111111-1111-4111-8111-111111111111","durationMs":0,"msg":"trpc reconcileStreak ok 0ms"}
+{"level":"error","time":"2026-10-19T05:56:30.537Z","pid":30876,"hostname":"Yaseens-MacBook-Pro.local","error":{"code":"42703","message":"column does not exist"},"userId":"11111111-1111-4111-8111-111111111111","msg":"[profiles.reconcileStreak] miss reconcile failed"}
+{"level":"info","time":"2026-10-19T05:56:30.537Z","pid":30876,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"reconcileStreak","userId":"11111111-1111-4111-8111-111111111111","durationMs":0,"errorCode":"INTERNAL_SERVER_ERROR","msg":"trpc reconcileStreak INTERNAL_SERVER_ERROR 0ms"}
+{"level":"error","time":"2026-10-19T05:56:30.537Z","pid":30876,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"reconcileStreak","userId":"11111111-1111-4111-8111-111111111111","code":"INTERNAL_SERVER_ERROR","message":"Failed to reconcile streak.","ts":"2026-10-19T05:56:30.537Z","msg":"trpc:error"}
+ ✓ lib/build92-part3.test.ts (26 tests) 28ms
+ ✓ backend/trpc/routes/profiles-stats.test.ts (11 tests) 31ms
+ ✓ lib/g2a-notifications.test.ts (12 tests) 5ms
+ ✓ lib/build92-first-day.test.ts (20 tests) 24ms
+ ✓ lib/share-sticker.test.ts (9 tests) 7ms
+ ✓ lib/build90-finish-requests.test.ts (15 tests) 268ms
+ ✓ lib/build90-task-inputs.test.ts (18 tests) 7ms
+ ✓ backend/lib/finalize-ended.test.ts (13 tests) 258ms
+ ✓ lib/onboarding-v2-suggest.test.ts (14 tests) 15ms
+ ✓ lib/profile-challenges.test.ts (15 tests) 6ms
+ ✓ lib/partial-log.test.ts (14 tests) 23ms
+ ✓ lib/build90-signup-requests.test.ts (13 tests) 220ms
+ ✓ backend/lib/content-moderation.test.ts (157 tests) 15ms
+ ❯ lib/challenge-detail-mapping.test.ts (28 tests | 2 failed) 32ms
+   × taskGates > detail / Home / review proof line is gateLabel including By 7ms
+     → expected '/**\n * Launched — "You\'re in." plus…' to contain 'gateLabel(first)'
+   × detailTaskRequired > Daily Gratitude: Write 3 is required, Share one is optional 3ms
+     → expected 'import React, { useMemo, useCallback,…' to contain '(cfg?.required ?? true) === true'
+ ✓ backend/lib/proof-predicate.test.ts (12 tests) 10ms
+ ✓ lib/build90-strava.test.ts (18 tests) 7ms
+ ✓ backend/lib/run-verification.test.ts (10 tests) 4ms
+ ✓ backend/lib/proofs-days.test.ts (9 tests) 22ms
+ ❯ lib/featured-catalog-seed.test.ts (11 tests | 1 failed) 16ms
+   × catalog SQL against column types > runs the applied seed, and rejects an untyped NULL for start_value 9ms
+     → Failed to load url @electric-sql/pglite (resolved id: @electric-sql/pglite) in /Users/yaseenabdela/Developer/GRIIT/lib/featured-catalog-seed.test.ts. Does the file exist?
+ ✓ backend/lib/task-model.test.ts (33 tests) 8ms
+ ✓ lib/finish-moment.test.ts (9 tests) 17ms
+ ✓ lib/work-step.test.ts (15 tests) 20ms
+ ✓ lib/build92-profile.test.ts (23 tests) 14ms
+ ✓ lib/morning-after.test.ts (7 tests) 11ms
+ ✓ lib/build90-safety.test.ts (10 tests) 7ms
+ ✓ backend/lib/miss-reconcile.test.ts (9 tests) 15ms
+ ✓ lib/finish-flow.test.ts (11 tests) 21ms
+ ✓ backend/lib/record-days.test.ts (14 tests) 18ms
+ ✓ lib/feed-join.test.ts (8 tests) 5ms
+{"level":"info","time":"2026-10-19T05:56:31.578Z","pid":30973,"hostname":"Yaseens-MacBook-Pro.local","userId":"11111111-1111-4111-8111-111111111111","challengeId":"bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb","endsAt":"2026-10-20T00:00:00.000Z","msg":"leave scheduled for local midnight"}
+stdout | backend/trpc/routes/challenges-join-leave.test.ts > participant leave > leave updates only the tapped active_challenge id
+leave targets active_challenge id aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa
+
+{"level":"info","time":"2026-10-19T05:56:31.578Z","pid":30973,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"challenges.leave","userId":"11111111-1111-4111-8111-111111111111","durationMs":12,"msg":"trpc challenges.leave ok 12ms"}
+{"level":"info","time":"2026-10-19T05:56:31.581Z","pid":30973,"hostname":"Yaseens-MacBook-Pro.local","userId":"11111111-1111-4111-8111-111111111111","challengeId":"bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb","endsAt":"2026-10-20T00:00:00.000Z","msg":"leave scheduled for local midnight"}
+{"level":"info","time":"2026-10-19T05:56:31.581Z","pid":30973,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"challenges.leave","userId":"11111111-1111-4111-8111-111111111111","durationMs":1,"msg":"trpc challenges.leave ok 1ms"}
+{"level":"info","time":"2026-10-19T05:56:31.582Z","pid":30973,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"challenges.listMyActive","userId":"11111111-1111-4111-8111-111111111111","durationMs":1,"msg":"trpc challenges.listMyActive ok 1ms"}
+{"level":"info","time":"2026-10-19T05:56:31.582Z","pid":30973,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"challenges.listUnseenEndings","userId":"11111111-1111-4111-8111-111111111111","durationMs":0,"msg":"trpc challenges.listUnseenEndings ok 0ms"}
+{"level":"info","time":"2026-10-19T05:56:31.586Z","pid":30973,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"listMyQueued","userId":"11111111-1111-4111-8111-111111111111","durationMs":4,"errorCode":"INTERNAL_SERVER_ERROR","msg":"trpc listMyQueued INTERNAL_SERVER_ERROR 4ms"}
+{"level":"error","time":"2026-10-19T05:56:31.586Z","pid":30973,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"listMyQueued","userId":"11111111-1111-4111-8111-111111111111","code":"INTERNAL_SERVER_ERROR","message":"q.eq(...).gt is not a function","ts":"2026-10-19T05:56:31.586Z","msg":"trpc:error"}
+{"level":"info","time":"2026-10-19T05:56:31.586Z","pid":30973,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"get","userId":"11111111-1111-4111-8111-111111111111","durationMs":4,"msg":"trpc get ok 4ms"}
+{"level":"info","time":"2026-10-19T05:56:31.587Z","pid":30973,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"getFreezeStatus","userId":"11111111-1111-4111-8111-111111111111","durationMs":4,"msg":"trpc getFreezeStatus ok 4ms"}
+{"level":"info","time":"2026-10-19T05:56:31.587Z","pid":30973,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"getActive","userId":"11111111-1111-4111-8111-111111111111","durationMs":5,"msg":"trpc getActive ok 5ms"}
+{"level":"info","time":"2026-10-19T05:56:31.588Z","pid":30973,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"listMyActive","userId":"11111111-1111-4111-8111-111111111111","durationMs":6,"msg":"trpc listMyActive ok 6ms"}
+{"level":"info","time":"2026-10-19T05:56:31.588Z","pid":30973,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"getTodayCheckinsForUser","userId":"11111111-1111-4111-8111-111111111111","durationMs":6,"msg":"trpc getTodayCheckinsForUser ok 6ms"}
+{"level":"info","time":"2026-10-19T05:56:31.588Z","pid":30973,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"getSecuredDateKeys","userId":"11111111-1111-4111-8111-111111111111","durationMs":5,"msg":"trpc getSecuredDateKeys ok 5ms"}
+{"level":"info","time":"2026-10-19T05:56:31.588Z","pid":30973,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"getStats","userId":"11111111-1111-4111-8111-111111111111","durationMs":6,"errorCode":"INTERNAL_SERVER_ERROR","msg":"trpc getStats INTERNAL_SERVER_ERROR 6ms"}
+{"level":"error","time":"2026-10-19T05:56:31.588Z","pid":30973,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"getStats","userId":"11111111-1111-4111-8111-111111111111","code":"INTERNAL_SERVER_ERROR","message":"supabase.from(...).select(...).eq(...).eq is not a function","ts":"2026-10-19T05:56:31.588Z","msg":"trpc:error"}
+{"level":"info","time":"2026-10-19T05:56:31.590Z","pid":30973,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"getFollowCounts","userId":"11111111-1111-4111-8111-111111111111","durationMs":7,"msg":"trpc getFollowCounts ok 7ms"}
+{"level":"error","time":"2026-10-19T05:56:31.590Z","pid":30973,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"home.bootstrap.stats","userId":"11111111-1111-4111-8111-111111111111","code":"SECTION_FAILED","message":"supabase.from(...).select(...).eq(...).eq is not a function","ts":"2026-10-19T05:56:31.590Z","msg":"trpc:error"}
+{"level":"error","time":"2026-10-19T05:56:31.590Z","pid":30973,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"home.bootstrap.queuedChallenges","userId":"11111111-1111-4111-8111-111111111111","code":"SECTION_FAILED","message":"q.eq(...).gt is not a function","ts":"2026-10-19T05:56:31.590Z","msg":"trpc:error"}
+{"level":"info","time":"2026-10-19T05:56:31.591Z","pid":30973,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"home.bootstrap","userId":"11111111-1111-4111-8111-111111111111","durationMs":9,"msg":"trpc home.bootstrap ok 9ms"}
+ ✓ backend/trpc/routes/challenges-join-leave.test.ts (3 tests) 26ms
+ ✓ lib/consistency.test.ts (7 tests) 8ms
+ ✓ lib/day-state.test.ts (8 tests) 16ms
+ ✓ lib/auth-redirect.test.ts (13 tests) 3ms
+ ✓ lib/challenge-end.test.ts (17 tests) 19ms
+ ✓ lib/build92-speed.test.ts (14 tests) 17ms
+ ✓ backend/lib/finished-run.test.ts (4 tests) 17ms
+{"level":"info","time":"2026-10-19T05:56:31.839Z","pid":30943,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"profiles.suggested","userId":"11111111-1111-4111-8111-111111111111","durationMs":0,"msg":"trpc profiles.suggested ok 0ms"}
+{"level":"info","time":"2026-10-19T05:56:31.843Z","pid":30965,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"feed.getLiveFeed","userId":"11111111-1111-4111-8111-111111111111","durationMs":1,"msg":"trpc feed.getLiveFeed ok 1ms"}
+{"level":"info","time":"2026-10-19T05:56:31.844Z","pid":30946,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"profiles.update","userId":"11111111-1111-4111-8111-111111111111","durationMs":1,"errorCode":"BAD_REQUEST","msg":"trpc profiles.update BAD_REQUEST 1ms"}
+{"level":"info","time":"2026-10-19T05:56:31.849Z","pid":30967,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"profiles.get","userId":"11111111-1111-4111-8111-111111111111","durationMs":11,"msg":"trpc profiles.get ok 11ms"}
+{"level":"info","time":"2026-10-19T05:56:31.854Z","pid":30877,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"challenges.create","userId":"11111111-1111-4111-8111-111111111111","durationMs":13,"msg":"trpc challenges.create ok 13ms"}
+{"level":"info","time":"2026-10-19T05:56:31.840Z","pid":30943,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"profiles.suggested","userId":"44444444-4444-4444-8444-444444444444","durationMs":0,"msg":"trpc profiles.suggested ok 0ms"}
+{"level":"info","time":"2026-10-19T05:56:31.849Z","pid":30943,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"leaderboard.getWeekly","userId":"11111111-1111-4111-8111-111111111111","durationMs":9,"msg":"trpc leaderboard.getWeekly ok 9ms"}
+{"level":"info","time":"2026-10-19T05:56:31.850Z","pid":30943,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"leaderboard.getWeekly","userId":"44444444-4444-4444-8444-444444444444","durationMs":0,"msg":"trpc leaderboard.getWeekly ok 0ms"}
+{"level":"info","time":"2026-10-19T05:56:31.850Z","pid":30943,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"leaderboard.getFriendsBoard","userId":"11111111-1111-4111-8111-111111111111","durationMs":0,"msg":"trpc leaderboard.getFriendsBoard ok 0ms"}
+{"level":"info","time":"2026-10-19T05:56:31.851Z","pid":30943,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"leaderboard.getFriendsBoard","userId":"44444444-4444-4444-8444-444444444444","durationMs":1,"msg":"trpc leaderboard.getFriendsBoard ok 1ms"}
+{"level":"info","time":"2026-10-19T05:56:31.852Z","pid":30943,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"leaderboard.getChallengeBoard","userId":"11111111-1111-4111-8111-111111111111","durationMs":1,"msg":"trpc leaderboard.getChallengeBoard ok 1ms"}
+{"level":"info","time":"2026-10-19T05:56:31.853Z","pid":30943,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"leaderboard.getChallengeBoard","userId":"44444444-4444-4444-8444-444444444444","durationMs":1,"msg":"trpc leaderboard.getChallengeBoard ok 1ms"}
+{"level":"info","time":"2026-10-19T05:56:31.855Z","pid":30943,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"feed.getLiveFeed","userId":"11111111-1111-4111-8111-111111111111","durationMs":1,"msg":"trpc feed.getLiveFeed ok 1ms"}
+{"level":"info","time":"2026-10-19T05:56:31.856Z","pid":30943,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"feed.getLiveFeed","userId":"44444444-4444-4444-8444-444444444444","durationMs":1,"msg":"trpc feed.getLiveFeed ok 1ms"}
+{"level":"error","time":"2026-10-19T05:56:31.845Z","pid":30946,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"profiles.update","userId":"11111111-1111-4111-8111-111111111111","code":"BAD_REQUEST","message":"Those words aren't allowed in a username. Try different ones.","ts":"2026-10-19T05:56:31.845Z","msg":"trpc:error"}
+{"level":"info","time":"2026-10-19T05:56:31.847Z","pid":30946,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"profiles.update","userId":"11111111-1111-4111-8111-111111111111","durationMs":0,"errorCode":"BAD_REQUEST","msg":"trpc profiles.update BAD_REQUEST 0ms"}
+{"level":"error","time":"2026-10-19T05:56:31.847Z","pid":30946,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"profiles.update","userId":"11111111-1111-4111-8111-111111111111","code":"BAD_REQUEST","message":"Those words aren't allowed in a display name. Try different ones.","ts":"2026-10-19T05:56:31.847Z","msg":"trpc:error"}
+{"level":"info","time":"2026-10-19T05:56:31.848Z","pid":30946,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"profiles.update","userId":"11111111-1111-4111-8111-111111111111","durationMs":1,"errorCode":"BAD_REQUEST","msg":"trpc profiles.update BAD_REQUEST 1ms"}
+{"level":"error","time":"2026-10-19T05:56:31.848Z","pid":30946,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"profiles.update","userId":"11111111-1111-4111-8111-111111111111","code":"BAD_REQUEST","message":"Those words aren't allowed in a bio. Try different ones.","ts":"2026-10-19T05:56:31.848Z","msg":"trpc:error"}
+{"level":"info","time":"2026-10-19T05:56:31.849Z","pid":30946,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"profiles.create","userId":"11111111-1111-4111-8111-111111111111","durationMs":1,"errorCode":"BAD_REQUEST","msg":"trpc profiles.create BAD_REQUEST 1ms"}
+{"level":"error","time":"2026-10-19T05:56:31.849Z","pid":30946,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"profiles.create","userId":"11111111-1111-4111-8111-111111111111","code":"BAD_REQUEST","message":"Those words aren't allowed in a username. Try different ones.","ts":"2026-10-19T05:56:31.849Z","msg":"trpc:error"}
+{"level":"info","time":"2026-10-19T05:56:31.849Z","pid":30946,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"profiles.create","userId":"11111111-1111-4111-8111-111111111111","durationMs":0,"errorCode":"BAD_REQUEST","msg":"trpc profiles.create BAD_REQUEST 0ms"}
+{"level":"error","time":"2026-10-19T05:56:31.849Z","pid":30946,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"profiles.create","userId":"11111111-1111-4111-8111-111111111111","code":"BAD_REQUEST","message":"Those words aren't allowed in a display name. Try different ones.","ts":"2026-10-19T05:56:31.849Z","msg":"trpc:error"}
+{"level":"info","time":"2026-10-19T05:56:31.849Z","pid":30946,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"profiles.create","userId":"11111111-1111-4111-8111-111111111111","durationMs":0,"errorCode":"BAD_REQUEST","msg":"trpc profiles.create BAD_REQUEST 0ms"}
+{"level":"error","time":"2026-10-19T05:56:31.849Z","pid":30946,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"profiles.create","userId":"11111111-1111-4111-8111-111111111111","code":"BAD_REQUEST","message":"Those words aren't allowed in a bio. Try different ones.","ts":"2026-10-19T05:56:31.849Z","msg":"trpc:error"}
+{"level":"info","time":"2026-10-19T05:56:31.850Z","pid":30946,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"user.completeOnboarding","userId":"11111111-1111-4111-8111-111111111111","durationMs":0,"errorCode":"BAD_REQUEST","msg":"trpc user.completeOnboarding BAD_REQUEST 0ms"}
+{"level":"error","time":"2026-10-19T05:56:31.850Z","pid":30946,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"user.completeOnboarding","userId":"11111111-1111-4111-8111-111111111111","code":"BAD_REQUEST","message":"Those words aren't allowed in a username. Try different ones.","ts":"2026-10-19T05:56:31.850Z","msg":"trpc:error"}
+{"level":"info","time":"2026-10-19T05:56:31.850Z","pid":30946,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"user.completeOnboarding","userId":"11111111-1111-4111-8111-111111111111","durationMs":0,"errorCode":"BAD_REQUEST","msg":"trpc user.completeOnboarding BAD_REQUEST 0ms"}
+{"level":"error","time":"2026-10-19T05:56:31.850Z","pid":30946,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"user.completeOnboarding","userId":"11111111-1111-4111-8111-111111111111","code":"BAD_REQUEST","message":"Those words aren't allowed in a display name. Try different ones.","ts":"2026-10-19T05:56:31.850Z","msg":"trpc:error"}
+{"level":"info","time":"2026-10-19T05:56:31.851Z","pid":30946,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"challenges.create","userId":"11111111-1111-4111-8111-111111111111","durationMs":0,"errorCode":"BAD_REQUEST","msg":"trpc challenges.create BAD_REQUEST 0ms"}
+{"level":"error","time":"2026-10-19T05:56:31.851Z","pid":30946,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"challenges.create","userId":"11111111-1111-4111-8111-111111111111","code":"BAD_REQUEST","message":"Those words aren't allowed in a challenge title. Try different ones.","ts":"2026-10-19T05:56:31.851Z","msg":"trpc:error"}
+{"level":"info","time":"2026-10-19T05:56:31.852Z","pid":30946,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"challenges.create","userId":"11111111-1111-4111-8111-111111111111","durationMs":0,"errorCode":"BAD_REQUEST","msg":"trpc challenges.create BAD_REQUEST 0ms"}
+{"level":"error","time":"2026-10-19T05:56:31.852Z","pid":30946,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"challenges.create","userId":"11111111-1111-4111-8111-111111111111","code":"BAD_REQUEST","message":"Those words aren't allowed in a challenge description. Try different ones.","ts":"2026-10-19T05:56:31.852Z","msg":"trpc:error"}
+{"level":"info","time":"2026-10-19T05:56:31.853Z","pid":30946,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"challenges.create","userId":"11111111-1111-4111-8111-111111111111","durationMs":0,"errorCode":"BAD_REQUEST","msg":"trpc challenges.create BAD_REQUEST 0ms"}
+{"level":"error","time":"2026-10-19T05:56:31.853Z","pid":30946,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"challenges.create","userId":"11111111-1111-4111-8111-111111111111","code":"BAD_REQUEST","message":"Those words aren't allowed in a task title. Try different ones.","ts":"2026-10-19T05:56:31.853Z","msg":"trpc:error"}
+{"level":"info","time":"2026-10-19T05:56:31.853Z","pid":30946,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"challenges.create","userId":"11111111-1111-4111-8111-111111111111","durationMs":0,"errorCode":"BAD_REQUEST","msg":"trpc challenges.create BAD_REQUEST 0ms"}
+{"level":"error","time":"2026-10-19T05:56:31.853Z","pid":30946,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"challenges.create","userId":"11111111-1111-4111-8111-111111111111","code":"BAD_REQUEST","message":"Those words aren't allowed in a journal prompt. Try different ones.","ts":"2026-10-19T05:56:31.853Z","msg":"trpc:error"}
+{"level":"info","time":"2026-10-19T05:56:31.853Z","pid":30946,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"challenges.create","userId":"11111111-1111-4111-8111-111111111111","durationMs":0,"errorCode":"BAD_REQUEST","msg":"trpc challenges.create BAD_REQUEST 0ms"}
+{"level":"error","time":"2026-10-19T05:56:31.853Z","pid":30946,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"challenges.create","userId":"11111111-1111-4111-8111-111111111111","code":"BAD_REQUEST","message":"Those words aren't allowed in a location name. Try different ones.","ts":"2026-10-19T05:56:31.853Z","msg":"trpc:error"}
+{"level":"info","time":"2026-10-19T05:56:31.854Z","pid":30946,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"challenges.create","userId":"11111111-1111-4111-8111-111111111111","durationMs":0,"errorCode":"BAD_REQUEST","msg":"trpc challenges.create BAD_REQUEST 0ms"}
+{" ✓ backend/trpc/routes/hide-test-authors.test.ts (5 tests) 19ms
+{"level":"info","time":"2026-10-19T05:56:31.849Z","pid":30967,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"streaks.getFreezeStatus","userId":"11111111-1111-4111-8111-111111111111","durationMs":10,"msg":"trpc streaks.getFreezeStatus ok 10ms"}
+{"level":"info","time":"2026-10-19T05:56:31.849Z","pid":30967,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"challenges.listMyQueued","userId":"11111111-1111-4111-8111-111111111111","durationMs":10,"msg":"trpc challenges.listMyQueued ok 10ms"}
+{"level":"info","time":"2026-10-19T05:56:31.849Z","pid":30967,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"challenges.getActive","userId":"11111111-1111-4111-8111-111111111111","durationMs":10,"msg":"trpc challenges.getActive ok 10ms"}
+{"level":"info","time":"2026-10-19T05:56:31.849Z","pid":30967,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"challenges.listMyActive","userId":"11111111-1111-4111-8111-111111111111","durationMs":10,"msg":"trpc challenges.listMyActive ok 10ms"}
+{"level":"info","time":"2026-10-19T05:56:31.849Z","pid":30967,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"profiles.getSecuredDateKeys","userId":"11111111-1111-4111-8111-111111111111","durationMs":10,"msg":"trpc profiles.getSecuredDateKeys ok 10ms"}
+{"level":"info","time":"2026-10-19T05:56:31.850Z","pid":30967,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"checkins.getTodayCheckinsForUser","userId":"11111111-1111-4111-8111-111111111111","durationMs":11,"msg":"trpc checkins.getTodayCheckinsForUser ok 11ms"}
+{"level":"info","time":"2026-10-19T05:56:31.850Z","pid":30967,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"profiles.getStats","userId":"11111111-1111-4111-8111-111111111111","durationMs":12,"msg":"trpc profiles.getStats ok 12ms"}
+{"level":"info","time":"2026-10-19T05:56:31.850Z","pid":30967,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"profiles.getFollowCounts","userId":"11111111-1111-4111-8111-111111111111","durationMs":11,"msg":"trpc profiles.getFollowCounts ok 11ms"}
+{"level":"info","time":"2026-10-19T05:56:31.850Z","pid":30967,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"checkins.getTodayCheckins","userId":"11111111-1111-4111-8111-111111111111","durationMs":0,"msg":"trpc checkins.getTodayCheckins ok 0ms"}
+{"level":"info","time":"2026-10-19T05:56:31.851Z","pid":30967,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"get","userId":"11111111-1111-4111-8111-111111111111","durationMs":0,"msg":"trpc get ok 0ms"}
+{"level":"info","time":"2026-10-19T05:56:31.851Z","pid":30967,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"getFreezeStatus","userId":"11111111-1111-4111-8111-111111111111","durationMs":0,"msg":"trpc getFreezeStatus ok 0ms"}
+{"level":"info","time":"2026-10-19T05:56:31.852Z","pid":30967,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"listMyQueued","userId":"11111111-1111-4111-8111-111111111111","durationMs":1,"msg":"trpc listMyQueued ok 1ms"}
+{"level":"info","time":"2026-10-19T05:56:31.852Z","pid":30967,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"getActive","userId":"11111111-1111-4111-8111-111111111111","durationMs":1,"msg":"trpc getActive ok 1ms"}
+{"level":"info","time":"2026-10-19T05:56:31.852Z","pid":30967,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"listMyActive","userId":"11111111-1111-4111-8111-111111111111","durationMs":1,"msg":"trpc listMyActive ok 1ms"}
+{"level":"info","time":"2026-10-19T05:56:31.852Z","pid":30967,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"getSecuredDateKeys","userId":"11111111-1111-4111-8111-111111111111","durationMs":1,"msg":"trpc getSecuredDateKeys ok 1ms"}
+{"level":"info","time":"2026-10-19T05:56:31.852Z","pid":30967,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"getTodayCheckinsForUser","userId":"11111111-1111-4111-8111-111111111111","durationMs":1,"msg":"trpc getTodayCheckinsForUser ok 1ms"}
+{"level":"info","time":"2026-10-19T05:56:31.852Z","pid":30967,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"getStats","userId":"11111111-1111-4111-8111-111111111111","durationMs":1,"msg":"trpc getStats ok 1ms"}
+{"level":"info","time":"2026-10-19T05:56:31.852Z","pid":30967,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"getFollowCounts","userId":"11111111-1111-4111-8111-111111111111","durationMs":1,"msg":"trpc getFollowCounts ok 1ms"}
+{"level":"info","time":"2026-10-19T05:56:31.852Z","pid":30967,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"getTodayCheckins","userId":"11111111-1111-4111-8111-111111111111","durationMs":0,"msg":"trpc getTodayCheckins ok 0ms"}
+{"level":"info","time":"2026-10-19T05:56:31.852Z","pid":30967,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"home.bootstrap","userId":"11111111-1111-4111-8111-111111111111","durationMs":1,"msg":"trpc home.bootstrap ok 1ms"}
+{"level":"info","time":"2026-10-19T05:56:31.854Z","pid":30967,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"get","userId":"11111111-1111-4111-8111-111111111111","durationMs":1,"msg":"trpc get ok 1ms"}
+{"level":"info","time":"2026-10-19T05:56:31.854Z","pid":30967,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"getFreezeStatus","userId":"11111111-1111-4111-8111-111111111111","durationMs":1,"msg":"trpc getFreezeStatus ok 1ms"}
+{"level":"info","time":"2026-10-19T05:56:31.854Z","pid":30967,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"listMyQueued","userId":"11111111-1111-4111-8111-111111111111","durationMs":1,"msg":"trpc listMyQueued ok 1ms"}
+{"level":"info","time":"2026-10-19T05:56:31.854Z","pid":30967,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"getActive","userId":"11111111-1111-4111-8111-111111111111","durationMs":1,"msg":"trpc getActive ok 1ms"}
+{"level":"info","time":"2026-10-19T05:56:31.854Z","pid":30967,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"listMyActive","userId":"11111111-1111-4111-8111-111111111111","durationMs":1,"msg":"trpc listMyActive ok 1ms"}
+{"level":"info","time":"2026-10-19T05:56:31.854Z","pid":30967,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"getSecuredDateKeys","userId":"11111111-1111-4111-8111-111111111111","durationMs":1,"msg":"trpc getSecuredDateKeys ok 1ms"}
+{"level":"info","time":"2026-10-19T05:56:31.856Z","pid":30967,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"getTodayCheckinsForUser","userId":"11111111-1111-4111-8111-111111111111","durationMs":3,"msg":"trpc getTodayCheckinsForUser ok 3ms"}
+{"level":"info","time":"2026-10-19T05:56:31.856Z","pid":30967,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"getFollowCounts","userId":"11111111-1111-4111-8111-111111111111","durationMs":3,"errorCode":"INTERNAL_SERVER_ERROR","msg":"trpc getFollowCounts INTERNAL_SERVER_ERROR 3ms"}
+{"level":"error","time":"2026-10-19T05:56:31.856Z","pid":30967,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"getFollowCounts","userId":"11111111-1111-4111-8111-111111111111","code":"INTERNAL_SERVER_ERROR","message":"follow counts down","ts":"2026-10-19T05:56:31.856Z","msg":"trpc:error"}
+{"level":"info","time":"2026-10-19T05:56:31.856Z","pid":30967,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"getStats","userId":"11111111-1111-4111-8111-111111111111","durationMs":3,"msg":"trpc getStats ok 3ms"}
+{"level":"error","time":"2026-10-19T05:56:31.857Z","pid":30967,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"home.bootstrap.followCounts","userId":"11111111-1111-4111-8111-111111111111","code":"SECTION_FAILED","message":"follow counts down","ts":"2026-10-19T05:56:31.857Z","msg":"trpc:error"}
+{"level":"info","time":"2026-10-19T05:56:31.857Z","pid":30967,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"getTodayCheckins","userId":"11111111-1111-4111-8111-111111111111","durationMs":0,"msg":"trpc getTodayCheckins ok 0ms"}
+{"level":"info","time":"2026-10-19T05:56:31.857Z","pid":30967,"hostnam ✓ backend/trpc/routes/home.test.ts (2 tests) 22ms
+e":"Yaseens-MacBook-Pro.local","requestId":"test","path":"home.bootstrap","userId":"11111111-1111-4111-8111-111111111111","durationMs":4,"msg":"trpc home.bootstrap ok 4ms"}
+level":"error","time":"2026-10-19T05:56:31.854Z","pid":30946,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"challenges.create","userId":"11111111-1111-4111-8111-111111111111","code":"BAD_REQUEST","message":"Those words aren't allowed in a routine. Try different ones.","ts":"2026-10-19T05:56:31.854Z","msg":"trpc:error"}
+{"level":"info","time":"2026-10-19T05:56:31.854Z","pid":30946,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"feed.comment","userId":"11111111-1111-4111-8111-111111111111","durationMs":0,"errorCode":"BAD_REQUEST","msg":"trpc feed.comment BAD_REQUEST 0ms"}
+{"level":"error","time":"2026-10-19T05:56:31.854Z","pid":30946,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"feed.comment","userId":"11111111-1111-4111-8111-111111111111","code":"BAD_REQUEST","message":"Those words aren't allowed in a comment. Try different ones.","ts":"2026-10-19T05:56:31.854Z","msg":"trpc:error"}
+{"level":"info","time":"2026-10-19T05:56:31.855Z","pid":30946,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"feed.shareCompletion","userId":"11111111-1111-4111-8111-111111111111","durationMs":1,"errorCode":"BAD_REQUEST","msg":"trpc feed.shareCompletion BAD_REQUEST 1ms"}
+{"level":"error","time":"2026-10-19T05:56:31.855Z","pid":30946,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"feed.shareCompletion","userId":"11111111-1111-4111-8111-111111111111","code":"BAD_REQUEST","message":"Those words aren't allowed in a caption. Try different ones.","ts":"2026-10-19T05:56:31.855Z","msg":"trpc:error"}
+{"level":"info","time":"2026-10-19T05:56:31.855Z","pid":30946,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"feed.comment","userId":"11111111-1111-4111-8111-111111111111","durationMs":0,"errorCode":"INTERNAL_SERVER_ERROR","msg":"trpc feed.comment INTERNAL_SERVER_ERROR 0ms"}
+{"level":"error","time":"2026-10-19T05:56:31.855Z","pid":30946,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"feed.comment","userId":"11111111-1111-4111-8111-111111111111","code":"INTERNAL_SERVER_ERROR","message":"no rows","ts":"2026-10-19T05:56:31.855Z","msg":"trpc:error"}
+{"level":"info","time":"2026-10-19T05:56:31.855Z","pid":30946,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"user.completeOnboarding","userId":"11111111-1111-4111-8111-111111111111","durationMs":0,"msg":"trpc user.completeOnboarding ok 0ms"}
+{"level":"info","time":"2026-10-19T05:56:31.855Z","pid":30946,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"profiles.update","userId":"11111111-1111-4111-8111-111111111111","durationMs":0,"msg":"trpc profiles.update ok 0ms"}
+{"level":"info","time":"2026-10-19T05:56:31.856Z","pid":30946,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"reports.reportComment","userId":"11111111-1111-4111-8111-111111111111","durationMs":0,"msg":"trpc reports.reportComment ok 0ms"}
+{"level":"info","time":"2026-10-19T05:56:31.856Z","pid":30946,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"reports.reportComment","userId":"11111111-1111-4111-8111-111111111111","durationMs":0,"errorCode":"BAD_REQUEST","msg":"trpc reports.reportComment BAD_REQUEST 0ms"}
+{"level":"error","time":"2026-10-19T05:56:31.856Z","pid":30946,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"reports.reportComment","userId":"11111111-1111-4111-8111-111111111111","code":"BAD_REQUEST","message":"You can't report your own comment.","ts":"2026-10-19T05:56:31.856Z","msg":"trpc:error"}
+{"level":"info","time":"2026-10-19T05:56:31.856Z","pid":30946,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"reports.reportComment","userId":"11111111-1111-4111-8111-111111111111","durationMs":0,"errorCode":"NOT_FOUND","msg":"trpc reports.reportComment NOT_FOUND 0ms"}
+{"level":"error","time":"2026-10-19T05:56:31.857Z","pid":30946,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"reports.reportComment","userId":"11111111-1111-4111-8111-111111111111","code":"NOT_FOUND","message":"Comment not found.","ts":"2026-10-19T05:56:31.857Z","msg":"trpc:error"}
+{"level":"info","time":"2026-10-19T05:56:31.857Z","pid":30946,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"feed.getComments","userId":"11111111-1111-4111-8111-111111111111","durationMs":0,"msg":"trpc feed.getComments ok 0ms"}
+ ✓ backend/trpc/routes/safety-fields.test.ts (16 tests) 16ms
+{"level":"info","time":"2026-10-19T05:56:31.856Z","pid":30877,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"groups.invite","userId":"11111111-1111-4111-8111-111111111111","durationMs":0,"errorCode":"FORBIDDEN","msg":"trpc groups.invite FORBIDDEN 0ms"}
+{"level":"error","time":"2026-10-19T05:56:31.856Z","pid":30877,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"groups.invite","userId":"11111111-1111-4111-8111-111111111111","code":"FORBIDDEN","message":"This group is full.","ts":"2026-10-19T05:56:31.856Z","msg":"trpc:error"}
+{"level":"info","time":"2026-10-19T05:56:31.857Z","pid":30877,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"groups.invite","userId":"11111111-1111-4111-8111-111111111111","durationMs":0,"msg":"trpc groups.invite ok 0ms"}
+{"level":"error","time":"2026-10-19T05:56:31.858Z","pid":30877,"hostname":"Yaseens-MacBook-Pro.local","err":{"type":"Object","message":"in_app_notifications_type_check","stack":""},"msg":"[groups.invite] notification insert failed"}
+{"level":"info","time":"2026-10-19T05:56:31.858Z","pid":30877,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"groups.invite","userId":"11111111-1111-4111-8111-111111111111","durationMs":0,"errorCode":"INTERNAL_SERVER_ERROR","msg":"trpc groups.invite INTERNAL_SERVER_ERROR 0ms"}
+{"level":"error","time":"2026-10-19T05:56:31.858Z","pid":30877,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"groups.invite","userId":"11111111-1111-4111-8111-111111111111","code":"INTERNAL_SERVER_ERROR","message":"Failed to send invite notification.","ts":"2026-10-19T05:56:31.858Z","msg":"trpc:error"}
+{"level":"info","time":"2026-10-19T05:56:31.859Z","pid":30877,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"groups.respond","userId":"22222222-2222-4222-8222-222222222222","durationMs":0,"msg":"trpc groups.respond ok 0ms"}
+{"level":"info","time":"2026-10-19T05:56:31.860Z","pid":30877,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"groups.respond","userId":"33333333-3333-4333-8333-333333333333","durationMs":0,"errorCode":"FORBIDDEN","msg":"trpc groups.respond FORBIDDEN 0ms"}
+{"level":"error","time":"2026-10-19T05:56:31.860Z","pid":30877,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"groups.respond","userId":"33333333-3333-4333-8333-333333333333","code":"FORBIDDEN","message":"Only the invitee can respond.","ts":"2026-10-19T05:56:31.860Z","msg":"trpc:error"}
+{"level":"info","time":"2026-09-16T15:00:00.000Z","pid":30877,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"groups.members","userId":"11111111-1111-4111-8111-111111111111","durationMs":0,"msg":"trpc groups.members ok 0ms"}
+{"level":"info","time":"2026-10-19T05:56:31.864Z","pid":30877,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"groups.openLink","userId":"22222222-2222-4222-8222-222222222222","durationMs":1,"msg":"trpc groups.openLink ok 1ms"}
+{"level":"info","time":"2026-10-19T05:56:31.845Z","pid":30965,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"feed.getPost","userId":"11111111-1111-4111-8111-111111111111","durationMs":1,"errorCode":"FORBIDDEN","msg":"trpc feed.getPost FORBIDDEN 1ms"}
+{"level":"error","time":"2026-10-19T05:56:31.845Z","pid":30965,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"feed.getPost","userId":"11111111-1111-4111-8111-111111111111","code":"FORBIDDEN","message":"You can't view this post","ts":"2026-10-19T05:56:31.845Z","msg":"trpc:error"}
+{"level":"info","time":"2026-10-19T05:56:31.856Z","pid":30965,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"feed.getLiveFeed","userId":"11111111-1111-4111-8111-111111111111","durationMs":10,"msg":"trpc feed.getLiveFeed ok 10ms"}
+{"level":"info","time":"2026-10-19T05:56:31.856Z","pid":30965,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"feed.getPost","userId":"11111111-1111-4111-8111-111111111111","durationMs":0,"msg":"trpc feed.getPost ok 0ms"}
+{"level":"info","time":"2026-10-19T05:56:31.857Z","pid":30965,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"feed.getLiveFeed","userId":"22222222-2222-4222-8222-222222222222","durationMs":0,"msg":"trpc feed.getLiveFeed ok 0ms"}
+{"level":"info","time":"2026-10-19T05:56:31.857Z","pid":30965,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"feed.getPost","userId":"22222222-2222-4222-8222-222222222222","durationMs":0,"msg":"trpc feed.getPost ok 0ms"}
+{"level":"info","time":"2026-10-19T05:56:31.858Z","pid":30965,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"feed.getLiveFeed","userId":"11111111-1111-4111-8111-111111111111","durationMs":0,"msg":"trpc feed.getLiveFeed ok 0ms"}
+{"level":"info","time":"2026-10-19T05:56:31.858Z","pid":30965,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"feed.getPost","userId":"11111111-1111-4111-8111-111111111111","durationMs":0,"msg":"trpc feed.getPost ok 0ms"}
+{"level":"info","time":"2026-10-19T05:56:31.859Z","pid":30965,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"feed.getLiveFeed","userId":"11111111-1111-4111-8111-111111111111","durationMs":0,"msg":"trpc feed.getLiveFeed ok 0ms"}
+{"level":"info","time":"2026-10-19T05:56:31.859Z","pid":30965,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"feed.getPost","userId":"11111111-1111-4111-8111-111111111111","durationMs":0,"errorCode":"FORBIDDEN","msg":"trpc feed.getPost FORBIDDEN 0ms"}
+{"level":"error","time":"2026-10-19T05:56:31.859Z","pid":30965,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"feed.getPost","userId":"11111111-1111-4111-8111-111111111111","code":"FORBIDDEN","message":"You can't view this post","ts":"2026-10-19T05:56:31.859Z","msg":"trpc:error"}
+{"level":"info","time":"2026-10-19T05:56:31.860Z","pid":30965,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"feed.getLiveFeed","userId":"22222222-2222-4222-8222-222222222222","durationMs":1,"msg":"trpc feed.getLiveFeed ok 1ms"}
+{"level":"info","time":"2026-10-19T05:56:31.861Z","pid":30965,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"feed.getLiveFeed","userId":"11111111-1111-4111-8111-111111111111","durationMs":0,"msg":"trpc feed.getLiveFeed ok 0ms"}
+{"level":"info","time":"2026-10-19T05:56:31.862Z","pid":30965,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"feed.getPost","userId":"11111111-1111-4111-8111-111111111111","durationMs":1,"msg":"trpc feed.getPost ok 1ms"}
+{"level":"info","time":"2026-10-19T05:56:31.862Z","pid":30965,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"feed.getPost","userId":"11111111-1111-4111-8111-111111111111","durationMs":0,"errorCode":"NOT_FOUND","msg":"trpc feed.getPost NOT_FOUND 0ms"}
+{"level":"error","time":"2026-10-19T05:56:31.862Z","pid":30965,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"feed.getPost","userId":"11111111-1111-4111-8111-111111111111","code":"NOT_FOUND","message":"Post not found","ts":"2026-10-19T05:56:31.862Z","msg":"trpc:error"}
+{"level":"info","time":"2026-10-19T05:56:31.863Z","pid":30965,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"feed.getLiveFeed","userId":"11111111-1111-4111-8111-111111111111","durationMs":1,"msg":"trpc feed.getLiveFeed ok 1ms"}
+{"level":"info","time":"2026-10-19T05:56:31.863Z","pid":30965,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"feed.getLiveFeed","userId":"33333333-3333-4333-8333-333333333333","durationMs":0,"msg":"trpc feed.getLiveFeed ok 0ms"}
+{"level":"info","time":"2026-10-19T05:56:31.864Z","pid":30965,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"feed.getPost","userId":"33333333-3333-4333-8333-333333333333","durationMs":1,"errorCode":"FORBIDDEN","msg":"trpc feed.getPost FORBIDDEN 1ms"}
+{"level":"error","time":"2026-10-19T05:56:31.864Z","pid":30965,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"feed.getPost","userId":"33333333-3333-4333-8333-333333333333","code":"FORBIDDEN","message":"You can't view this post","ts":"2026-10-19T05:56:31.864Z","msg":"trpc:error"}
+{"level":"info","time":"2026-10-19T05:56:31.864Z","pid":30965,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"feed.getLiveFeed","userId":"33333333-3333-4333-8333-333333333333","durationMs":0,"msg":"trpc feed.getLiveFeed ok 0ms"}
+{"level":"info","time":"2026-10-19T05:56:31.865Z","pid":30965,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"feed.getPost","userId":"33333333-3333-4333-8333-333333333333","durationMs":1,"errorCode":"FORBIDDEN","msg":"trpc feed.getPost FORBIDDEN 1ms"}
+{"level":"error","time":"2026-10-19T05:56:31.865Z","pid":30965,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"feed.getPost","userId":"33333333-3333-4333-8333-333333333333","code":"FORBIDDEN","message":"You can't view this post","ts":"2026-10-19T05:56:31.865Z","msg":"trpc:error"}
+{"level":"info","time":"2026-10-19T05:56:31.865Z","pid":30965,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"feed.getLiveFeed","userId":"11111111-1111-4111-8111-111111111111","durationMs":0,"msg":"trpc feed.getLiveFeed ok 0ms"}
+{"level":"info","time":"2026-10-19T05:56:31.866Z","pid":30965,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"feed.getLiveFeed","userId":"11111111-1111-4111-8111-111111111111","durationMs":0,"msg":"trpc feed.getLiveFeed ok 0ms"}
+{"level":"info","time":"2026-10-19T05:56:31.866Z","pid":30965,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"feed.getLiveFeed","userId":"22222222-2222-4222-8222-222222222222","durationMs":0,"msg":"trpc feed.getLiveFeed ok 0ms"}
+ ✓ backend/trpc/routes/groups.test.ts (8 tests) 24ms
+ ✓ backend/trpc/routes/feed-friends-visibility.test.ts (10 tests) 25ms
+{"level":"info","time":"2026-10-19T05:56:31.889Z","pid":31005,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"groups.openLink","userId":"11111111-1111-4111-8111-111111111111","durationMs":1,"msg":"trpc groups.openLink ok 1ms"}
+ ✓ backend/lib/activity-share.test.ts (9 tests) 8ms
+{"level":"info","time":"2026-10-19T05:56:31.891Z","pid":31005,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"groups.openLink","userId":"11111111-1111-4111-8111-111111111111","durationMs":0,"errorCode":"NOT_FOUND","msg":"trpc groups.openLink NOT_FOUND 0ms"}
+{"level":"error","time":"2026-10-19T05:56:31.891Z","pid":31005,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"groups.openLink","userId":"11111111-1111-4111-8111-111111111111","code":"NOT_FOUND","message":"Challenge not found.","ts":"2026-10-19T05:56:31.891Z","msg":"trpc:error"}
+{"level":"info","time":"2026-10-19T05:56:31.893Z","pid":31005,"hostname":"Yaseens-MacBook-Pro.local","challengeId":"aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa","authed":true,"found":true,"error":null,"msg":"[challenges.getById] attempt"}
+{"level":"info","time":"2026-10-19T05:56:31.893Z","pid":31005,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"challenges.getById","userId":"11111111-1111-4111-8111-111111111111","durationMs":1,"errorCode":"FORBIDDEN","msg":"trpc challenges.getById FORBIDDEN 1ms"}
+{"level":"error","time":"2026-10-19T05:56:31.893Z","pid":31005,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"challenges.getById","userId":"11111111-1111-4111-8111-111111111111","code":"FORBIDDEN","message":"This challenge is private.","ts":"2026-10-19T05:56:31.893Z","msg":"trpc:error"}
+{"level":"info","time":"2026-10-19T05:56:31.894Z","pid":31005,"hostname":"Yaseens-MacBook-Pro.local","challengeId":"aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa","authed":true,"found":true,"error":null,"msg":"[challenges.getById] attempt"}
+{"level":"info","time":"2026-10-19T05:56:31.894Z","pid":31005,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"challenges.getById","userId":"11111111-1111-4111-8111-111111111111","durationMs":0,"msg":"trpc challenges.getById ok 0ms"}
+{"level":"info","time":"2026-10-19T05:56:31.894Z","pid":31005,"hostname":"Yaseens-MacBook-Pro.local","challengeId":"aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa","authed":false,"found":true,"error":null,"msg":"[challenges.getById] attempt"}
+{"level":"info","time":"2026-10-19T05:56:31.894Z","pid":31005,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"challenges.getById","userId":null,"durationMs":0,"msg":"trpc challenges.getById ok 0ms"}
+{"level":"info","time":"2026-10-19T05:56:31.895Z","pid":31005,"hostname":"Yaseens-MacBook-Pro.local","challengeId":"aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa","authed":true,"found":true,"error":null,"msg":"[challenges.getById] attempt"}
+{"level":"info","time":"2026-10-19T05:56:31.895Z","pid":31005,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"challenges.getById","userId":"11111111-1111-4111-8111-111111111111","durationMs":0,"errorCode":"FORBIDDEN","msg":"trpc challenges.getById FORBIDDEN 0ms"}
+{"level":"error","time":"2026-10-19T05:56:31.895Z","pid":31005,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"challenges.getById","userId":"11111111-1111-4111-8111-111111111111","code":"FORBIDDEN","message":"This challenge is private.","ts":"2026-10-19T05:56:31.895Z","msg":"trpc:error"}
+{"level":"info","time":"2026-10-19T05:56:31.895Z","pid":31005,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"challenges.search","userId":"11111111-1111-4111-8111-111111111111","durationMs":0,"msg":"trpc challenges.search ok 0ms"}
+{"level":"info","time":"2026-10-19T05:56:31.896Z","pid":31005,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"challenges.search","userId":"11111111-1111-4111-8111-111111111111","durationMs":0,"msg":"trpc challenges.search ok 0ms"}
+{"level":"info","time":"2026-10-19T05:56:31.897Z","pid":31005,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"challenges.search","userId":"11111111-1111-4111-8111-111111111111","durationMs":0,"msg":"trpc challenges.search ok 0ms"}
+{"level":"info","time":"2026-10-19T05:56:31.897Z","pid":31005,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"challenges.search","userId":"11111111-1111-4111-8111-111111111111","durationMs":0,"msg":"trpc challenges.search ok 0ms"}
+{"level":"info","time":"2026-10-19T05:56:31.898Z","pid":31005,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"challenges.search","userId":"11111111-1111-4111-8111-111111111111","durationMs":0,"msg":"trpc challenges.search ok 0ms"}
+ ✓ backend/trpc/routes/friend-loop.test.ts (10 tests) 10ms
+ ✓ lib/secured-day.test.ts (7 tests) 5ms
+ ✓ lib/build92-invite.test.ts (12 tests) 123ms
+{"level":"info","time":"2026-10-19T05:56:32.073Z","pid":31013,"hostname":"Yaseens-MacBook-Pro.local","ms":23,"gapMs":22,"steps":{"secure_setup":0,"secure_context":0,"secure_day_rpc":1,"secure_after_rpc":0,"freeze_grant":0},"userId":"11111111-1111-4111-8111-111111111111","code":null,"msg":"[checkins.secureDay] steps"}
+ ✓ backend/trpc/routes/checkins-secure-day.test.ts (7 tests) 32ms
+{"level":"info","time":"2026-10-19T05:56:32.074Z","pid":31013,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"checkins.secureDay","userId":"11111111-1111-4111-8111-111111111111","durationMs":24,"msg":"trpc checkins.secureDay ok 24ms"}
+{"level":"info","time":"2026-10-19T05:56:32.075Z","pid":31013,"hostname":"Yaseens-MacBook-Pro.local","ms":0,"gapMs":0,"steps":{"secure_setup":0,"secure_context":0,"secure_day_rpc":0,"secure_after_rpc":0,"days_update":0,"freeze_grant":0},"userId":"11111111-1111-4111-8111-111111111111","code":null,"msg":"[checkins.secureDay] steps"}
+{"level":"info","time":"2026-10-19T05:56:32.075Z","pid":31013,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"checkins.secureDay","userId":"11111111-1111-4111-8111-111111111111","durationMs":0,"msg":"trpc checkins.secureDay ok 0ms"}
+{"level":"info","time":"2026-10-19T05:56:32.076Z","pid":31013,"hostname":"Yaseens-MacBook-Pro.local","ms":0,"gapMs":0,"steps":{"secure_setup":0,"secure_context":0,"secure_day_rpc":0,"secure_after_rpc":0,"freeze_grant":0},"userId":"11111111-1111-4111-8111-111111111111","code":null,"msg":"[checkins.secureDay] steps"}
+{"level":"info","time":"2026-10-19T05:56:32.076Z","pid":31013,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"checkins.secureDay","userId":"11111111-1111-4111-8111-111111111111","durationMs":0,"msg":"trpc checkins.secureDay ok 0ms"}
+{"level":"info","time":"2026-10-19T05:56:32.077Z","pid":31013,"hostname":"Yaseens-MacBook-Pro.local","ms":0,"gapMs":0,"steps":{"secure_setup":0,"secure_context":0,"secure_day_rpc":0,"secure_after_rpc":0,"days_update":0,"freeze_grant":0},"userId":"11111111-1111-4111-8111-111111111111","code":null,"msg":"[checkins.secureDay] steps"}
+{"level":"info","time":"2026-10-19T05:56:32.077Z","pid":31013,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"checkins.secureDay","userId":"11111111-1111-4111-8111-111111111111","durationMs":0,"msg":"trpc checkins.secureDay ok 0ms"}
+{"level":"info","time":"2026-10-19T05:56:32.077Z","pid":31013,"hostname":"Yaseens-MacBook-Pro.local","ms":0,"gapMs":0,"steps":{"secure_setup":0,"secure_context":0,"secure_day_rpc":0,"secure_after_rpc":0,"days_update":0,"freeze_grant":0},"userId":"11111111-1111-4111-8111-111111111111","code":null,"msg":"[checkins.secureDay] steps"}
+{"level":"info","time":"2026-10-19T05:56:32.077Z","pid":31013,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"checkins.secureDay","userId":"11111111-1111-4111-8111-111111111111","durationMs":0,"msg":"trpc checkins.secureDay ok 0ms"}
+{"level":"info","time":"2026-10-19T05:56:32.078Z","pid":31013,"hostname":"Yaseens-MacBook-Pro.local","ms":0,"gapMs":0,"steps":{"secure_setup":0,"secure_context":0,"secure_day_rpc":0,"secure_after_rpc":0,"days_update":0,"freeze_grant":0},"userId":"11111111-1111-4111-8111-111111111111","code":null,"msg":"[checkins.secureDay] steps"}
+{"level":"info","time":"2026-10-19T05:56:32.078Z","pid":31013,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"checkins.secureDay","userId":"11111111-1111-4111-8111-111111111111","durationMs":0,"msg":"trpc checkins.secureDay ok 0ms"}
+{"level":"info","time":"2026-10-19T05:56:32.078Z","pid":31013,"hostname":"Yaseens-MacBook-Pro.local","ms":0,"gapMs":0,"steps":{"secure_setup":0,"secure_context":0,"secure_day_rpc":0,"secure_after_rpc":0,"days_update":0,"freeze_grant":0},"userId":"11111111-1111-4111-8111-111111111111","code":null,"msg":"[checkins.secureDay] steps"}
+{"level":"info","time":"2026-10-19T05:56:32.079Z","pid":31013,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"checkins.secureDay","userId":"11111111-1111-4111-8111-111111111111","durationMs":1,"msg":"trpc checkins.secureDay ok 1ms"}
+ ✓ lib/group-ui.test.ts (16 tests) 9ms
+ ✓ backend/lib/is-friend.test.ts (13 tests) 3ms
+ ✓ lib/post-result.test.ts (13 tests) 6ms
+{"level":"error","time":"2026-10-19T05:56:32.128Z","pid":31069,"hostname":"Yaseens-MacBook-Pro.local","err":{"type":"Object","message":"duplicate key","stack":"","code":"23505","details":"Key (user_id, challenge_id) already exists"},"userId":"11111111-1111-4111-8111-111111111111","challengeId":"bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb","msg":"[JOIN-BACKEND] Insert active_challenges error"}
+ ✓ lib/day-secure-ui.test.ts (12 tests) 4ms
+ ✓ backend/lib/join-challenge.test.ts (14 tests) 17ms
+ ✓ backend/lib/me-stats.test.ts (8 tests) 62ms
+ ✓ lib/task-ui.test.ts (22 tests) 4ms
+ ✓ lib/proofs-grid.test.ts (5 tests) 15ms
+ ✓ lib/day-sticker.test.ts (9 tests) 13ms
+ ✓ backend/lib/start-waiting-room.test.ts (6 tests) 4ms
+ ✓ lib/freeze-sheet.test.ts (3 tests) 15ms
+ ✓ backend/lib/feed-activity-hydrate.test.ts (6 tests) 13ms
+ ✓ lib/share-image.test.ts (5 tests) 18ms
+{"level":"info","time":"2026-10-19T05:56:32.445Z","pid":31029,"hostname":"Yaseens-MacBook-Pro.local","ms":34,"gapMs":0,"steps":{"setup":4,"context":2,"upsert":2,"secure_day_rpc":3,"activity_event":3,"progress":3,"secure_after_rpc":2,"days_update":2,"freeze_grant":0,"secure":9,"finish":10,"sign_urls":0},"userId":"11111111-1111-4111-8111-111111111111","taskId":"e0000000-0000-4000-8000-000000000005","taskType":"manual","photo":false,"secured":true,"msg":"[checkins.complete] steps"}
+{"level":"info","time":"2026-10-19T05:56:32.446Z","pid":31029,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"checkins.complete","userId":"11111111-1111-4111-8111-111111111111","durationMs":37,"msg":"trpc checkins.complete ok 37ms"}
+ ✓ backend/lib/join-challenge-direct.test.ts (6 tests) 389ms
+   ✓ joinChallengeDirect start-again > maps unique violation to already-in instead of Failed to join 375ms
+{"level":"info","time":"2026-10-19T05:56:32.810Z","pid":31029,"hostname":"Yaseens-MacBook-Pro.local","ms":47,"gapMs":0,"steps":{"setup":23,"context":2,"upsert":4,"secure_day_rpc":4,"activity_event":4,"progress":5,"secure_after_rpc":9,"days_update":2,"freeze_grant":0,"secure":15,"finish":15,"sign_urls":2},"userId":"11111111-1111-4111-8111-111111111111","taskId":"e0000000-0000-4000-8000-000000000005","taskType":"manual","photo":true,"secured":true,"msg":"[checkins.complete] steps"}
+{"level":"info","time":"2026-10-19T05:56:32.810Z","pid":31029,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"checkins.complete","userId":"11111111-1111-4111-8111-111111111111","durationMs":47,"msg":"trpc checkins.complete ok 47ms"}
+ ✓ lib/task-completion-result.test.ts (8 tests) 3ms
+ ✓ lib/chunk-u-feed.test.ts (4 tests) 9ms
+{"level":"info","time":"2026-10-19T05:56:32.875Z","pid":31029,"hostname":"Yaseens-MacBook-Pro.local","ms":23,"gapMs":0,"steps":{"setup":2,"context":3,"upsert":3,"secure_day_rpc":7,"activity_event":9,"progress":9,"secure_after_rpc":2,"days_update":3,"freeze_grant":0,"secure":14,"finish":14,"sign_urls":0},"userId":"11111111-1111-4111-8111-111111111111","taskId":"e0000000-0000-4000-8000-000000000005","taskType":"manual","photo":false,"secured":true,"msg":"[checkins.complete] steps"}
+{"level":"info","time":"2026-10-19T05:56:32.875Z","pid":31029,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"checkins.complete","userId":"11111111-1111-4111-8111-111111111111","durationMs":23,"msg":"trpc checkins.complete ok 23ms"}
+ ✓ backend/lib/backend-import-graph.test.ts (4 tests) 3ms
+ ✓ lib/home-streak.test.ts (10 tests) 26ms
+{"level":"info","time":"2026-10-19T05:56:32.921Z","pid":31049,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"profiles.blockUser","userId":"11111111-1111-4111-8111-111111111111","durationMs":1,"msg":"trpc profiles.blockUser ok 1ms"}
+{"level":"info","time":"2026-10-19T05:56:32.922Z","pid":31049,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"profiles.blockUser","userId":"11111111-1111-4111-8111-111111111111","durationMs":0,"msg":"trpc profiles.blockUser ok 0ms"}
+{"level":"info","time":"2026-10-19T05:56:32.923Z","pid":31049,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"profiles.blockUser","userId":"11111111-1111-4111-8111-111111111111","durationMs":0,"errorCode":"BAD_REQUEST","msg":"trpc profiles.blockUser BAD_REQUEST 0ms"}
+{"level":"error","time":"2026-10-19T05:56:32.923Z","pid":31049,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"profiles.blockUser","userId":"11111111-1111-4111-8111-111111111111","code":"BAD_REQUEST","message":"You cannot block yourself.","ts":"2026-10-19T05:56:32.923Z","msg":"trpc:error"}
+{"level":"info","time":"2026-10-19T05:56:32.924Z","pid":31049,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"profiles.unblockUser","userId":"11111111-1111-4111-8111-111111111111","durationMs":0,"msg":"trpc profiles.unblockUser ok 0ms"}
+{"level":"info","time":"2026-10-19T05:56:32.925Z","pid":31049,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"feed.getLiveFeed","userId":"11111111-1111-4111-8111-111111111111","durationMs":1,"msg":"trpc feed.getLiveFeed ok 1ms"}
+{"level":"info","time":"2026-10-19T05:56:32.926Z","pid":31049,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"profiles.blockUser","userId":"","durationMs":0,"errorCode":"UNAUTHORIZED","msg":"trpc profiles.blockUser UNAUTHORIZED 0ms"}
+{"level":"error","time":"2026-10-19T05:56:32.926Z","pid":31049,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"profiles.blockUser","userId":"","code":"UNAUTHORIZED","message":"UNAUTHORIZED","ts":"2026-10-19T05:56:32.926Z","msg":"trpc:error"}
+{"level":"info","time":"2026-10-19T05:56:32.936Z","pid":31029,"hostname":"Yaseens-MacBook-Pro.local","ms":18,"gapMs":0,"steps":{"setup":4,"context":3,"upsert":2,"secure_day_rpc":3,"activity_event":3,"progress":3,"secure_after_rpc":2,"days_update":3,"freeze_grant":0,"secure":8,"finish":8,"sign_urls":0},"userId":"11111111-1111-4111-8111-111111111111","taskId":"e0000000-0000-4000-8000-000000000005","taskType":"manual","photo":false,"secured":true,"msg":"[checkins.complete] steps"}
+{"level":"info","time":"2026-10-19T05:56:32.936Z","pid":31029,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"checkins.complete","userId":"11111111-1111-4111-8111-111111111111","durationMs":18,"msg":"trpc checkins.complete ok 18ms"}
+ ✓ backend/trpc/routes/blocking.test.ts (6 tests) 8ms
+ ✓ backend/trpc/routes/checkins-complete-rounds.test.ts (4 tests) 572ms
+   ✓ checkins.complete sequential round trips (01b.2) > a self-reported first finish that secures the day answers in at most 8 rounds 355ms
+ ✓ backend/lib/enrollment-window.test.ts (5 tests) 4ms
+ ✓ backend/lib/post-result.test.ts (8 tests) 9ms
+ ✓ lib/profile-v2-proof-photo.test.ts (5 tests) 10ms
+{"level":"info","time":"2026-10-19T05:56:33.104Z","pid":31067,"hostname":"Yaseens-MacBook-Pro.local","challengeId":"bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb","authed":false,"found":true,"error":null,"msg":"[challenges.getById] attempt"}
+ ✓ lib/day-open.test.ts (5 tests) 3ms
+{"level":"info","time":"2026-10-19T05:56:33.104Z","pid":31067,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"getById","userId":null,"durationMs":1,"msg":"trpc getById ok 1ms"}
+{"level":"info","time":"2026-10-19T05:56:33.105Z","pid":31067,"hostname":"Yaseens-MacBook-Pro.local","challengeId":"bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb","authed":false,"found":true,"error":null,"msg":"[challenges.getById] attempt"}
+{"level":"info","time":"2026-10-19T05:56:33.105Z","pid":31067,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"getById","userId":null,"durationMs":0,"errorCode":"FORBIDDEN","msg":"trpc getById FORBIDDEN 0ms"}
+{"level":"error","time":"2026-10-19T05:56:33.105Z","pid":31067,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"getById","userId":null,"code":"FORBIDDEN","message":"This challenge is private.","ts":"2026-10-19T05:56:33.105Z","msg":"trpc:error"}
+{"level":"info","time":"2026-10-19T05:56:33.106Z","pid":31067,"hostname":"Yaseens-MacBook-Pro.local","challengeId":"bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb","authed":true,"found":true,"error":null,"msg":"[challenges.getById] attempt"}
+{"level":"info","time":"2026-10-19T05:56:33.106Z","pid":31067,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"getById","userId":"33333333-3333-4333-8333-333333333333","durationMs":0,"errorCode":"FORBIDDEN","msg":"trpc getById FORBIDDEN 0ms"}
+{"level":"error","time":"2026-10-19T05:56:33.106Z","pid":31067,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"getById","userId":"33333333-3333-4333-8333-333333333333","code":"FORBIDDEN","message":"This challenge is private.","ts":"2026-10-19T05:56:33.106Z","msg":"trpc:error"}
+{"level":"info","time":"2026-10-19T05:56:33.106Z","pid":31067,"hostname":"Yaseens-MacBook-Pro.local","challengeId":"bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb","authed":true,"found":true,"error":null,"msg":"[challenges.getById] attempt"}
+{"level":"info","time":"2026-10-19T05:56:33.106Z","pid":31067,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"getById","userId":"11111111-1111-4111-8111-111111111111","durationMs":0,"msg":"trpc getById ok 0ms"}
+{"level":"info","time":"2026-10-19T05:56:33.107Z","pid":31067,"hostname":"Yaseens-MacBook-Pro.local","challengeId":"bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb","authed":true,"found":true,"error":null,"msg":"[challenges.getById] attempt"}
+{"level":"info","time":"2026-10-19T05:56:33.107Z","pid":31067,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"getById","userId":"22222222-2222-4222-8222-222222222222","durationMs":0,"msg":"trpc getById ok 0ms"}
+{"level":"info","time":"2026-10-19T05:56:33.107Z","pid":31067,"hostname":"Yaseens-MacBook-Pro.local","input":{"challengeId":"bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"},"userId":"33333333-3333-4333-8333-333333333333","msg":"[JOIN-BACKEND] Join procedure called"}
+{"level":"info","time":"2026-10-19T05:56:33.108Z","pid":31067,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"challenges.join","userId":"33333333-3333-4333-8333-333333333333","durationMs":1,"errorCode":"FORBIDDEN","msg":"trpc challenges.join FORBIDDEN 1ms"}
+{"level":"error","time":"2026-10-19T05:56:33.108Z","pid":31067,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"challenges.join","userId":"33333333-3333-4333-8333-333333333333","code":"FORBIDDEN","message":"This challenge is private.","ts":"2026-10-19T05:56:33.108Z","msg":"trpc:error"}
+ ✓ backend/trpc/routes/challenges-get-by-id.test.ts (4 tests) 6ms
+ ✓ lib/backend-client-imports.test.ts (1 test) 126ms
+ ✓ backend/lib/counter-progress.test.ts (8 tests) 15ms
+ ✓ backend/lib/anonymous-authors.test.ts (6 tests) 5ms
+ ✓ backend/lib/first-day-window.test.ts (4 tests) 15ms
+{"level":"info","time":"2026-10-19T05:56:33.257Z","pid":31064,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"notifications.getAll","userId":"11111111-1111-4111-8111-111111111111","durationMs":0,"msg":"trpc notifications.getAll ok 0ms"}
+{"level":"info","time":"2026-10-19T05:56:33.258Z","pid":31094,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"challenges.listMyActive","userId":"11111111-1111-4111-8111-111111111111","durationMs":0,"msg":"trpc challenges.listMyActive ok 0ms"}
+{"level":"info","time":"2026-10-19T05:56:33.260Z","pid":31094,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"challenges.listMyActive","userId":"11111111-1111-4111-8111-111111111111","durationMs":1,"msg":"trpc challenges.listMyActive ok 1ms"}
+ ✓ backend/trpc/routes/challenges-list-my-active.test.ts (3 tests) 3ms
+{"level":"info","time":"2026-10-19T05:56:33.258Z","pid":31064,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"notifications.getAll","userId":"44444444-4444-4444-8444-444444444444","durationMs":0,"msg":"trpc notifications.getAll ok 0ms"}
+{"level":"info","time":"2026-10-19T05:56:33.259Z","pid":31064,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"feed.getComments","userId":"11111111-1111-4111-8111-111111111111","durationMs":0,"msg":"trpc feed.getComments ok 0ms"}
+{"level":"info","time":"2026-10-19T05:56:33.260Z","pid":31064,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"feed.getComments","userId":"44444444-4444-4444-8444-444444444444","durationMs":0,"msg":"trpc feed.getComments ok 0ms"}
+{"level":"info","time":"2026-10-19T05:56:33.260Z","pid":31064,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"feed.getReactions","userId":"11111111-1111-4111-8111-111111111111","durationMs":0,"msg":"trpc feed.getReactions ok 0ms"}
+{"level":"info","time":"2026-10-19T05:56:33.260Z","pid":31064,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"feed.getReactions","userId":"44444444-4444-4444-8444-444444444444","durationMs":0,"msg":"trpc feed.getReactions ok 0ms"}
+ ✓ backend/trpc/routes/hide-test-lists.test.ts (3 tests) 5ms
+{"level":"info","time":"2026-10-19T05:56:33.266Z","pid":31052,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test-req-id","path":"profiles.get","userId":"a0000000-0000-4000-8000-000000000001","durationMs":0,"msg":"trpc profiles.get ok 0ms"}
+stderr | tests/flows/critical-paths.test.ts > Critical paths (flow simulation) > Step 5: checkins.secureDay with invalid activeChallengeId returns error
+[date-utils] profile timezone missing; using UTC a0000000-0000-4000-8000-000000000001
+
+{"level":"info","time":"2026-10-19T05:56:33.271Z","pid":31052,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test-req-id","path":"challenges.list","userId":"a0000000-0000-4000-8000-000000000001","durationMs":3,"errorCode":"INTERNAL_SERVER_ERROR","msg":"trpc challenges.list INTERNAL_SERVER_ERROR 3ms"}
+{"level":"error","time":"2026-10-19T05:56:33.271Z","pid":31052,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test-req-id","path":"challenges.list","userId":"a0000000-0000-4000-8000-000000000001","code":"INTERNAL_SERVER_ERROR","message":"ctx.supabase.from(...).select(...).eq(...).order is not a function","ts":"2026-10-19T05:56:33.271Z","msg":"trpc:error"}
+{"level":"info","time":"2026-10-19T05:56:33.272Z","pid":31052,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test-req-id","path":"challenges.getById","userId":"a0000000-0000-4000-8000-000000000001","durationMs":0,"errorCode":"BAD_REQUEST","msg":"trpc challenges.getById BAD_REQUEST 0ms"}
+{"level":"error","time":"2026-10-19T05:56:33.272Z","pid":31052,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test-req-id","path":"challenges.getById","userId":"a0000000-0000-4000-8000-000000000001","code":"BAD_REQUEST","message":"[\n  {\n    \"origin\": \"string\",\n    \"code\": \"invalid_format\",\n    \"format\": \"uuid\",\n    \"pattern\": \"/^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$/\",\n    \"path\": [\n      \"id\"\n    ],\n    \"message\": \"Invalid UUID\"\n  }\n]","ts":"2026-10-19T05:56:33.272Z","msg":"trpc:error"}
+{"level":"info","time":"2026-10-19T05:56:33.273Z","pid":31052,"hostname":"Yaseens-MacBook-Pro.local","input":{"challengeId":"b0000000-0000-4000-8000-000000000002"},"userId":"a0000000-0000-4000-8000-000000000001","msg":"[JOIN-BACKEND] Join procedure called"}
+{"level":"info","time":"2026-10-19T05:56:33.274Z","pid":31052,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test-req-id","path":"challenges.join","userId":"a0000000-0000-4000-8000-000000000001","durationMs":1,"errorCode":"INTERNAL_SERVER_ERROR","msg":"trpc challenges.join INTERNAL_SERVER_ERROR 1ms"}
+{"level":"error","time":"2026-10-19T05:56:33.274Z","pid":31052,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test-req-id","path":"challenges.join","userId":"a0000000-0000-4000-8000-000000000001","code":"INTERNAL_SERVER_ERROR","message":"supabase.from(...).select(...).eq(...).maybeSingle is not a function","ts":"2026-10-19T05:56:33.274Z","msg":"trpc:error"}
+{"level":"info","time":"2026-10-19T05:56:33.275Z","pid":31052,"hostname":"Yaseens-MacBook-Pro.local","ms":0,"gapMs":0,"steps":{"secure_setup":0},"userId":"a0000000-0000-4000-8000-000000000001","code":"NOT_FOUND","msg":"[checkins.secureDay] steps"}
+{"level":"info","time":"2026-10-19T05:56:33.275Z","pid":31052,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test-req-id","path":"checkins.secureDay","userId":"a0000000-0000-4000-8000-000000000001","durationMs":0,"errorCode":"NOT_FOUND","msg":"trpc checkins.secureDay NOT_FOUND 0ms"}
+{"level":"error","time":"2026-10-19T05:56:33.275Z","pid":31052,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test-req-id","path":"checkins.secureDay","userId":"a0000000-0000-4000-8000-000000000001","code":"NOT_FOUND","message":"Active challenge not found.","ts":"2026-10-19T05:56:33.275Z","msg":"trpc:error"}
+{"level":"info","time":"2026-10-19T05:56:33.276Z","pid":31052,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test-req-id","path":"profiles.getPublicByUsername","userId":"a0000000-0000-4000-8000-000000000001","durationMs":0,"msg":"trpc profiles.getPublicByUsername ok 0ms"}
+ ✓ tests/flows/critical-paths.test.ts (6 tests) 1404ms
+ ✓ lib/secured-since.test.ts (4 tests) 4ms
+ ✓ lib/create-chooser.test.ts (9 tests) 4ms
+ ✓ lib/home-pull-refresh.test.ts (8 tests) 4ms
+ ✓ backend/trpc/routes/checkins.live-location.test.ts (8 tests) 3ms
+ ✓ lib/glass.test.ts (10 tests) 4ms
+ ✓ backend/lib/group-challenges.test.ts (10 tests) 4ms
+ ✓ backend/lib/invite-codes.test.ts (8 tests) 8ms
+{"level":"info","time":"2026-10-19T05:56:33.411Z","pid":31116,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"challenges.listUnseenEndings","userId":"11111111-1111-4111-8111-111111111111","durationMs":0,"msg":"trpc challenges.listUnseenEndings ok 0ms"}
+{"level":"info","time":"2026-10-19T05:56:33.413Z","pid":31116,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"challenges.finalizeEnded","userId":"11111111-1111-4111-8111-111111111111","durationMs":1,"errorCode":"INTERNAL_SERVER_ERROR","msg":"trpc challenges.finalizeEnded INTERNAL_SERVER_ERROR 1ms"}
+{"level":"error","time":"2026-10-19T05:56:33.413Z","pid":31116,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"challenges.finalizeEnded","userId":"11111111-1111-4111-8111-111111111111","code":"INTERNAL_SERVER_ERROR","message":"Service role unavailable.","ts":"2026-10-19T05:56:33.413Z","msg":"trpc:error"}
+ ✓ backend/trpc/routes/challenges-end.test.ts (3 tests) 4ms
+ ✓ backend/lib/discover-catalog.test.ts (7 tests) 4ms
+ ✓ lib/chunk-u-profile.test.ts (4 tests) 3ms
+ ✓ lib/week-strip-days.test.ts (7 tests) 4ms
+ ✓ backend/lib/date-utils-timezone.test.ts (8 tests) 16ms
+ ✓ lib/task-completion-copy.test.ts (7 tests) 3ms
+ ✓ lib/day-viewer-nav.test.ts (7 tests) 7ms
+ ✓ lib/onboarding-v2-account-name.test.ts (11 tests) 13ms
+ ✓ lib/g2a-home.test.ts (6 tests) 6ms
+ ✓ lib/g3-profile.test.ts (4 tests) 6ms
+ ✓ lib/avatar-initials.test.ts (6 tests) 3ms
+ ✓ lib/onboarding-v2-browse.test.ts (4 tests) 9ms
+ ✓ lib/post-detail.test.ts (10 tests) 3ms
+ ✓ lib/v42-badges.test.ts (4 tests) 5ms
+ ✓ lib/route-after-save.test.ts (13 tests) 3ms
+{"level":"info","time":"2026-10-19T05:56:33.844Z","pid":31104,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"leaderboard.getChallengeBoard","userId":"11111111-1111-4111-8111-111111111111","durationMs":22,"msg":"trpc leaderboard.getChallengeBoard ok 22ms"}
+{"level":"info","time":"2026-10-19T05:56:33.846Z","pid":31104,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"leaderboard.getChallengeBoard","userId":"22222222-2222-4222-8222-222222222222","durationMs":1,"msg":"trpc leaderboard.getChallengeBoard ok 1ms"}
+{"level":"info","time":"2026-10-19T05:56:33.847Z","pid":31104,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"leaderboard.getChallengeBoard","userId":"11111111-1111-4111-8111-111111111111","durationMs":1,"msg":"trpc leaderboard.getChallengeBoard ok 1ms"}
+ ✓ lib/feed-respect.test.ts (7 tests) 41ms
+ ✓ backend/trpc/routes/challenge-board-invite-only.test.ts (3 tests) 26ms
+ ✓ backend/lib/leave-effective.test.ts (5 tests) 45ms
+ ✓ lib/schedule-window.test.ts (11 tests) 55ms
+ ✓ lib/today-section-collapse.test.ts (5 tests) 8ms
+ ✓ lib/post-audience.test.ts (8 tests) 3ms
+ ✓ lib/goal-challenge-map.test.ts (8 tests) 13ms
+ ✓ lib/challenge-card.test.ts (3 tests) 12ms
+ ✓ lib/g2a-challenge.test.ts (5 tests) 14ms
+ ✓ lib/discover-people.test.ts (4 tests) 4ms
+ ✓ backend/lib/workout-verification.test.ts (7 tests) 3ms
+ ✓ backend/lib/live-feed-page.test.ts (5 tests) 3ms
+ ✓ backend/lib/photo-verification.test.ts (8 tests) 13ms
+{"level":"info","time":"2026-10-19T05:56:34.102Z","pid":31145,"hostname":"Yaseens-MacBook-Pro.local","requestId":"edge-req-id","path":"challenges.getById","userId":"a0000000-0000-4000-8000-000000000001","durationMs":0,"errorCode":"BAD_REQUEST","msg":"trpc challenges.getById BAD_REQUEST 0ms"}
+ ✓ tests/flows/edge-cases.test.ts (4 tests) 1047ms
+{"level":"error","time":"2026-10-19T05:56:34.102Z","pid":31145,"hostname":"Yaseens-MacBook-Pro.local","requestId":"edge-req-id","path":"challenges.getById","userId":"a0000000-0000-4000-8000-000000000001","code":"BAD_REQUEST","message":"[\n  {\n    \"origin\": \"string\",\n    \"code\": \"invalid_format\",\n    \"format\": \"uuid\",\n    \"pattern\": \"/^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$/\",\n    \"path\": [\n      \"id\"\n    ],\n    \"message\": \"Invalid UUID\"\n  }\n]","ts":"2026-10-19T05:56:34.102Z","msg":"trpc:error"}
+{"level":"info","time":"2026-10-19T05:56:34.103Z","pid":31145,"hostname":"Yaseens-MacBook-Pro.local","requestId":"edge-req-id","path":"profiles.get","userId":null,"durationMs":0,"errorCode":"UNAUTHORIZED","msg":"trpc profiles.get UNAUTHORIZED 0ms"}
+{"level":"error","time":"2026-10-19T05:56:34.103Z","pid":31145,"hostname":"Yaseens-MacBook-Pro.local","requestId":"edge-req-id","path":"profiles.get","userId":null,"code":"UNAUTHORIZED","message":"UNAUTHORIZED","ts":"2026-10-19T05:56:34.103Z","msg":"trpc:error"}
+{"level":"info","time":"2026-10-19T05:56:34.105Z","pid":31145,"hostname":"Yaseens-MacBook-Pro.local","requestId":"edge-req-id","path":"profiles.update","userId":"a0000000-0000-4000-8000-000000000001","durationMs":1,"errorCode":"BAD_REQUEST","msg":"trpc profiles.update BAD_REQUEST 1ms"}
+{"level":"error","time":"2026-10-19T05:56:34.105Z","pid":31145,"hostname":"Yaseens-MacBook-Pro.local","requestId":"edge-req-id","path":"profiles.update","userId":"a0000000-0000-4000-8000-000000000001","code":"BAD_REQUEST","message":"[\n  {\n    \"code\": \"too_small\",\n    \"minimum\": 3,\n    \"type\": \"string\",\n    \"inclusive\": true,\n    \"exact\": false,\n    \"message\": \"String must contain at least 3 character(s)\",\n    \"path\": [\n      \"username\"\n    ]\n  },\n  {\n    \"validation\": \"regex\",\n    \"code\": \"invalid_string\",\n    \"message\": \"Letters, numbers, underscores, dots only\",\n    \"path\": [\n      \"username\"\n    ]\n  }\n]","ts":"2026-10-19T05:56:34.105Z","msg":"trpc:error"}
+{"level":"info","time":"2026-10-19T05:56:34.110Z","pid":31145,"hostname":"Yaseens-MacBook-Pro.local","requestId":"edge-req-id","path":"challenges.create","userId":"a0000000-0000-4000-8000-000000000001","durationMs":5,"errorCode":"INTERNAL_SERVER_ERROR","msg":"trpc challenges.create INTERNAL_SERVER_ERROR 5ms"}
+{"level":"error","time":"2026-10-19T05:56:34.110Z","pid":31145,"hostname":"Yaseens-MacBook-Pro.local","requestId":"edge-req-id","path":"challenges.create","userId":"a0000000-0000-4000-8000-000000000001","code":"INTERNAL_SERVER_ERROR","message":"ctx.supabase.from(...).upsert is not a function","ts":"2026-10-19T05:56:34.110Z","msg":"trpc:error"}
+ ✓ backend/lib/guest-merge.test.ts (3 tests) 2ms
+ ✓ lib/consistency-record.test.ts (3 tests) 3ms
+ ✓ backend/lib/finish-bundle.test.ts (4 tests) 45ms
+ ✓ lib/challenge-catalog-screen.test.ts (5 tests) 3ms
+ ✓ backend/lib/leave-challenge.test.ts (7 tests) 15ms
+ ✓ lib/visitor-follow.test.ts (6 tests) 15ms
+ ✓ lib/proof-viewer.test.ts (3 tests) 17ms
+ ✓ lib/free-challenge-limit.test.ts (6 tests) 24ms
+ ✓ agents/src/stuck.test.ts (4 tests) 33ms
+ ✓ lib/apple-session.test.ts (2 tests) 6ms
+ ✓ backend/lib/checkin-complete-gates.test.ts (5 tests) 2ms
+ ✓ lib/live-feed-list.test.ts (2 tests) 3ms
+ ✓ lib/create-launched.test.ts (4 tests) 13ms
+ ✓ backend/trpc/routes/journal-private.test.ts (6 tests) 5ms
+ ✓ lib/profile-privacy.test.ts (9 tests) 8ms
+ ✓ lib/freeze-recovery.test.ts (3 tests) 18ms
+ ✓ lib/catalog-cover.test.ts (5 tests) 3ms
+ ✓ lib/build90-speed.test.ts (5 tests) 2ms
+ ✓ lib/task-flow-window.test.ts (6 tests) 4ms
+ ✓ lib/privacy-copy.test.ts (4 tests) 3ms
+ ✓ lib/onboarding-v2-reminders.test.ts (4 tests) 3ms
+ ✓ lib/late-join.test.ts (3 tests) 16ms
+ ✓ lib/check-profile.test.ts (4 tests) 5ms
+ ✓ backend/lib/task-time-gate.test.ts (8 tests) 54ms
+ ✓ lib/home-day-total.test.ts (6 tests) 44ms
+ ✓ lib/reconcile-needed.test.ts (8 tests) 3ms
+ ✓ lib/onboarding-v2-profile.test.ts (5 tests) 8ms
+ ✓ lib/safe-area-status-bar.test.ts (3 tests) 2ms
+ ✓ tests/design-system-contrast.test.ts (2 tests) 2ms
+ ✓ lib/challenge-today-copy.test.ts (4 tests) 3ms
+ ✓ lib/tokens-v46.test.ts (4 tests) 17ms
+ ✓ components/onboarding/v2/completeOnboarding.test.ts (2 tests) 3ms
+ ✓ lib/challenge-day.test.ts (4 tests) 14ms
+ ✓ backend/lib/today-posters.test.ts (4 tests) 16ms
+ ✓ lib/moment-queue.test.ts (3 tests) 18ms
+{"level":"warn","time":"2026-10-19T05:56:35.152Z","pid":31313,"hostname":"Yaseens-MacBook-Pro.local","label":"feed_comments","message":"missing","msg":"[deleteAccount] step failed"}
+ ✓ backend/lib/delete-account.test.ts (4 tests) 10ms
+{"level":"warn","time":"2026-10-19T05:56:35.152Z","pid":31313,"hostname":"Yaseens-MacBook-Pro.local","label":"feed_reactions","message":"missing","msg":"[deleteAccount] step failed"}
+{"level":"warn","time":"2026-10-19T05:56:35.152Z","pid":31313,"hostname":"Yaseens-MacBook-Pro.local","label":"feed_shares","message":"missing","msg":"[deleteAccount] step failed"}
+{"level":"warn","time":"2026-10-19T05:56:35.152Z","pid":31313,"hostname":"Yaseens-MacBook-Pro.local","label":"check_ins","message":"missing","msg":"[deleteAccount] step failed"}
+{"level":"warn","time":"2026-10-19T05:56:35.152Z","pid":31313,"hostname":"Yaseens-MacBook-Pro.local","label":"day_secures","message":"missing","msg":"[deleteAccount] step failed"}
+{"level":"warn","time":"2026-10-19T05:56:35.152Z","pid":31313,"hostname":"Yaseens-MacBook-Pro.local","label":"activity_events","message":"missing","msg":"[deleteAccount] step failed"}
+{"level":"warn","time":"2026-10-19T05:56:35.152Z","pid":31313,"hostname":"Yaseens-MacBook-Pro.local","label":"streaks","message":"missing","msg":"[deleteAccount] step failed"}
+{"level":"warn","time":"2026-10-19T05:56:35.152Z","pid":31313,"hostname":"Yaseens-MacBook-Pro.local","label":"freeze_grants","message":"missing","msg":"[deleteAccount] step failed"}
+{"level":"warn","time":"2026-10-19T05:56:35.152Z","pid":31313,"hostname":"Yaseens-MacBook-Pro.local","label":"freeze_uses","message":"missing","msg":"[deleteAccount] step failed"}
+{"level":"warn","time":"2026-10-19T05:56:35.152Z","pid":31313,"hostname":"Yaseens-MacBook-Pro.local","label":"user_achievements","message":"missing","msg":"[deleteAccount] step failed"}
+{"level":"warn","time":"2026-10-19T05:56:35.152Z","pid":31313,"hostname":"Yaseens-MacBook-Pro.local","label":"push_tokens","message":"missing","msg":"[deleteAccount] step failed"}
+{"level":"warn","time":"2026-10-19T05:56:35.152Z","pid":31313,"hostname":"Yaseens-MacBook-Pro.local","label":"in_app_notifications","message":"missing","msg":"[deleteAccount] step failed"}
+{"level":"warn","time":"2026-10-19T05:56:35.152Z","pid":31313,"hostname":"Yaseens-MacBook-Pro.local","label":"challenge_reports","message":"missing","msg":"[deleteAccount] step failed"}
+{"level":"warn","time":"2026-10-19T05:56:35.152Z","pid":31313,"hostname":"Yaseens-MacBook-Pro.local","label":"user_reports","message":"missing","msg":"[deleteAccount] step failed"}
+{"level":"warn","time":"2026-10-19T05:56:35.152Z","pid":31313,"hostname":"Yaseens-MacBook-Pro.local","label":"user_reports","message":"missing","msg":"[deleteAccount] step failed"}
+{"level":"warn","time":"2026-10-19T05:56:35.152Z","pid":31313,"hostname":"Yaseens-MacBook-Pro.local","label":"active_challenges","message":"missing","msg":"[deleteAccount] step failed"}
+{"level":"warn","time":"2026-10-19T05:56:35.152Z","pid":31313,"hostname":"Yaseens-MacBook-Pro.local","label":"user_follows","message":"missing","msg":"[deleteAccount] step failed"}
+{"level":"warn","time":"2026-10-19T05:56:35.152Z","pid":31313,"hostname":"Yaseens-MacBook-Pro.local","label":"user_follows","message":"missing","msg":"[deleteAccount] step failed"}
+{"level":"warn","time":"2026-10-19T05:56:35.152Z","pid":31313,"hostname":"Yaseens-MacBook-Pro.local","label":"blocked_users","message":"missing","msg":"[deleteAccount] step failed"}
+{"level":"warn","time":"2026-10-19T05:56:35.152Z","pid":31313,"hostname":"Yaseens-MacBook-Pro.local","label":"blocked_users","message":"missing","msg":"[deleteAccount] step failed"}
+{"level":"warn","time":"2026-10-19T05:56:35.152Z","pid":31313,"hostname":"Yaseens-MacBook-Pro.local","label":"profiles","message":"missing","msg":"[deleteAccount] step failed"}
+ ✓ lib/profile-v2-visibility.test.ts (9 tests) 4ms
+ ✓ lib/day-cell.test.ts (2 tests) 37ms
+ ✓ lib/auth-reset.test.ts (7 tests) 3ms
+ ✓ lib/origin-tab.test.ts (4 tests) 3ms
+ ✓ backend/lib/step-timer.test.ts (5 tests) 3ms
+ ✓ lib/evening-secure.test.ts (3 tests) 4ms
+ ✓ backend/lib/enrollment-day-stats.test.ts (4 tests) 22ms
+ ✓ backend/lib/enrollment-finish.test.ts (5 tests) 18ms
+ ✓ lib/proof-moment.test.ts (3 tests) 2ms
+ ✓ backend/lib/enrollment-end-at.test.ts (4 tests) 15ms
+ ✓ agents/src/match.test.ts (5 tests) 10ms
+ ✓ backend/lib/can-view-challenge.test.ts (4 tests) 3ms
+ ✓ backend/trpc/routes/challenges-create.test.ts (8 tests) 2ms
+ ✓ lib/share-invite-copy.test.ts (4 tests) 2ms
+ ✓ lib/settings-rows.test.ts (2 tests) 3ms
+ ✓ lib/create-wizard-payload.test.ts (4 tests) 3ms
+ ✓ backend/trpc/routes/profiles-record.test.ts (6 tests) 2ms
+ ✓ lib/onboarding-v2-exit.test.ts (3 tests) 2ms
+ ✓ lib/finalize-ended-foreground.test.ts (4 tests) 4ms
+ ✓ backend/lib/ensure-profile.test.ts (2 tests) 2ms
+ ✓ lib/task-complete-toast.test.ts (4 tests) 2ms
+ ✓ lib/chunk-u-u5.test.ts (2 tests) 3ms
+ ✓ lib/group-nudge.test.ts (2 tests) 2ms
+ ✓ backend/lib/progression.test.ts (9 tests) 3ms
+ ✓ backend/lib/journal-verification.test.ts (6 tests) 2ms
+ ✓ backend/lib/timer-session.test.ts (6 tests) 2ms
+ ✓ backend/trpc/routes/check-ins-columns.test.ts (2 tests) 14ms
+ ✓ backend/trpc/routes/challenges-discover.test.ts (1 test) 2ms
+ ✓ lib/greeting.test.ts (8 tests) 13ms
+ ✓ backend/lib/starter-task.test.ts (6 tests) 3ms
+ ✓ lib/write-step.test.ts (4 tests) 2ms
+ ✓ lib/journal-ready-gates.test.ts (8 tests) 2ms
+ ✓ lib/v44-detail.test.ts (3 tests) 2ms
+ ✓ lib/onboarding-v2-account-saved.test.ts (3 tests) 3ms
+{"level":"info","time":"2026-10-19T05:56:35.732Z","pid":31298,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"reports.reportUser","userId":"11111111-1111-4111-8111-111111111111","durationMs":1,"msg":"trpc reports.reportUser ok 1ms"}
+{"level":"info","time":"2026-10-19T05:56:35.734Z","pid":31298,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"reports.reportUser","userId":"11111111-1111-4111-8111-111111111111","durationMs":0,"msg":"trpc reports.reportUser ok 0ms"}
+{"level":"info","time":"2026-10-19T05:56:35.735Z","pid":31298,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"reports.reportUser","userId":"11111111-1111-4111-8111-111111111111","durationMs":0,"errorCode":"BAD_REQUEST","msg":"trpc reports.reportUser BAD_REQUEST 0ms"}
+{"level":"error","time":"2026-10-19T05:56:35.735Z","pid":31298,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"reports.reportUser","userId":"11111111-1111-4111-8111-111111111111","code":"BAD_REQUEST","message":"You can't report yourself.","ts":"2026-10-19T05:56:35.735Z","msg":"trpc:error"}
+ ✓ backend/trpc/routes/reports.test.ts (3 tests) 6ms
+ ✓ lib/real-verification-gates.test.ts (8 tests) 2ms
+ ✓ lib/verifying-proof.test.ts (5 tests) 2ms
+ ✓ backend/lib/onboarding-starter-pack.test.ts (3 tests) 2ms
+ ✓ lib/share-colour.test.ts (2 tests) 5ms
+ ✓ agents/src/gate.test.ts (3 tests) 6ms
+ ✓ lib/g2a-apply.test.ts (2 tests) 4ms
+ ✓ lib/time-enforcement.test.ts (8 tests) 4ms
+ ✓ backend/lib/checkin-verification.test.ts (6 tests) 3ms
+ ✓ lib/g2b-home.test.ts (5 tests) 15ms
+ ✓ lib/onboarding-v2-goals.test.ts (6 tests) 2ms
+ ✓ backend/trpc/routes/last-stand.test.ts (11 tests) 3ms
+ ❯ lib/join-challenge-error.test.ts (5 tests | 1 failed) 7ms
+   × classifyJoinChallengeError > onboarding join moves on when the person is already in the challenge 4ms
+     → expected 'import { ensureAnonymousSession } fro…' to contain 'return { ok: true }'
+ ✓ lib/simple-log.test.ts (3 tests) 3ms
+ ✓ lib/profile-update-schema.test.ts (4 tests) 3ms
+ ✓ backend/lib/daily-challenge-cron.test.ts (2 tests) 13ms
+ ✓ lib/sentry.test.ts (1 test) 6ms
+ ✓ lib/today-band.test.ts (4 tests) 11ms
+ ✓ lib/api.test.ts (8 tests) 10ms
+ ✓ lib/onboarding-v2-account-session.test.ts (3 tests) 13ms
+ ✓ backend/lib/account-privacy.test.ts (1 test) 3ms
+ ✓ lib/featured-catalog.test.ts (2 tests) 2ms
+ ✓ lib/run-ready-gates.test.ts (6 tests) 2ms
+ ✓ lib/session-expired-banner.test.ts (4 tests) 3ms
+ ✓ lib/onboarding-v2-invalidate.test.ts (1 test) 3ms
+ ✓ lib/home-top.test.ts (4 tests) 11ms
+ ✓ lib/keypad-masks.test.ts (4 tests) 2ms
+ ✓ lib/create-wizard-hard-proof.test.ts (4 tests) 3ms
+ ✓ lib/onboarding-v2-step.test.ts (3 tests) 2ms
+ ✓ lib/onboarding-v2-first-challenge.test.ts (4 tests) 3ms
+ ✓ lib/proof-resize.test.ts (2 tests) 4ms
+ ✓ backend/lib/full-house.test.ts (3 tests) 36ms
+ ✓ lib/create-review.test.ts (4 tests) 2ms
+ ✓ backend/lib/free-challenge-limit.test.ts (5 tests) 15ms
+ ✓ backend/lib/freeze-grant.test.ts (6 tests) 2ms
+ ✓ lib/tab-bar-inset.test.ts (4 tests) 2ms
+ ✓ lib/today-completion.test.ts (3 tests) 2ms
+ ✓ backend/lib/create-visibility.test.ts (4 tests) 2ms
+ ✓ lib/workout-ready-gates.test.ts (4 tests) 34ms
+ ✓ lib/formatTimeAgo.test.ts (6 tests) 13ms
+ ✓ lib/optimistic-feed.test.ts (2 tests) 2ms
+ ✓ lib/adopt-existing-account.test.ts (2 tests) 21ms
+ ✓ lib/notification-title.test.ts (2 tests) 33ms
+ ✓ backend/lib/secured-elapsed.test.ts (1 test) 25ms
+ ✓ lib/time-gate-picker.test.ts (4 tests) 6ms
+ ✓ lib/counter-ready-gates.test.ts (5 tests) 5ms
+ ✓ backend/lib/discover-v43.test.ts (3 tests) 8ms
+ ✓ backend/lib/due-keys.test.ts (4 tests) 4ms
+ ✓ lib/photo-ready-gates.test.ts (5 tests) 2ms
+ ✓ lib/save-streak-prompt.test.ts (3 tests) 7ms
+ ✓ backend/lib/morning-miss.test.ts (6 tests) 2ms
+ ✓ lib/checkin-ready-gates.test.ts (4 tests) 2ms
+ ✓ lib/optimistic-home.test.ts (2 tests) 15ms
+ ✓ lib/onboarding-v2-account-email.test.ts (3 tests) 2ms
+ ✓ lib/home-state.test.ts (4 tests) 8ms
+ ✓ lib/discover-proof-label.test.ts (3 tests) 6ms
+ ✓ lib/profile-read.test.ts (2 tests) 2ms
+ ✓ lib/control-pill.test.ts (1 test) 2ms
+ ✓ tests/task-progress.test.ts (4 tests) 3ms
+ ✓ backend/lib/counter-verification.test.ts (4 tests) 2ms
+ ✓ lib/open-first-task.test.ts (3 tests) 1ms
+ ✓ lib/camera-permission-gate.test.ts (4 tests) 4ms
+ ✓ backend/lib/proof-payload.test.ts (5 tests) 10ms
+ ✓ lib/home-status.test.ts (2 tests) 4ms
+ ✓ lib/safe-area.test.ts (3 tests) 38ms
+ ✓ lib/primary-button-color.test.ts (2 tests) 2ms
+ ✓ lib/trpc-errors.test.ts (3 tests) 2ms
+ ✓ lib/challenge-countdown.test.ts (2 tests) 15ms
+ ✓ lib/feed-actions.test.ts (1 test) 2ms
+ ✓ lib/discover-preview-tasks.test.ts (2 tests) 2ms
+ ✓ lib/journal-draft.test.ts (3 tests) 17ms
+ ✓ lib/feed-tap-targets.test.ts (2 tests) 2ms
+ ✓ lib/query-retry.test.ts (3 tests) 2ms
+ ✓ lib/discover-cta.test.ts (2 tests) 2ms
+ ✓ lib/reconcile-persist.test.ts (1 test) 3ms
+ ✓ lib/notification-due-count.test.ts (1 test) 6ms
+ ✓ lib/challenge-category.test.ts (5 tests) 2ms
+ ✓ lib/share-choice-photo.test.ts (1 test) 9ms
+ ✓ lib/empty-home-starter.test.ts (3 tests) 2ms
+ ✓ lib/ready-start.test.ts (5 tests) 25ms
+ ✓ lib/group-invite-link.test.ts (1 test) 30ms
+ ✓ lib/morning-motivation-day.test.ts (2 tests) 17ms
+ ✓ lib/journal-leave.test.ts (2 tests) 3ms
+ ✓ supabase/migrations/prod-record-drafts.test.ts (2 tests) 3ms
+ ✓ lib/counter-log.test.ts (4 tests) 2ms
+ ✓ lib/onboarding-v2-skip.test.ts (1 test) 1ms
+ ✓ lib/profile-v2-username.test.ts (3 tests) 2ms
+ ✓ lib/day-total-source.test.ts (4 tests) 3ms
+ ✓ lib/auth-reset-redirect.test.ts (2 tests) 2ms
+{"level":"info","time":"2026-10-19T05:56:38.853Z","pid":31514,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"today.get","userId":"11111111-1111-4111-8111-111111111111","durationMs":2,"msg":"trpc today.get ok 2ms"}
+ ✓ backend/trpc/routes/today.test.ts (1 test) 5ms
+ ✓ lib/comment-row.test.ts (3 tests) 2ms
+ ✓ lib/secured-layout.test.ts (4 tests) 2ms
+ ✓ lib/feed-copy.test.ts (5 tests) 2ms
+ ✓ lib/inline-server-error.test.ts (3 tests) 2ms
+ ✓ agents/src/account.test.ts (2 tests) 2ms
+{"level":"info","time":"2026-10-19T05:56:39.204Z","pid":31560,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"nudges.send","userId":"11111111-1111-4111-8111-111111111111","durationMs":1,"errorCode":"BAD_REQUEST","msg":"trpc nudges.send BAD_REQUEST 1ms"}
+{"level":"error","time":"2026-10-19T05:56:39.204Z","pid":31560,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"nudges.send","userId":"11111111-1111-4111-8111-111111111111","code":"BAD_REQUEST","message":"Nudges live in group challenges now.","ts":"2026-10-19T05:56:39.204Z","msg":"trpc:error"}
+ ✓ backend/trpc/routes/nudges.test.ts (3 tests) 5ms
+ ✓ lib/profile-display.test.ts (2 tests) 4ms
+ ✓ lib/finish-location.test.ts (1 test) 2ms
+ ✓ lib/onboarding-completed-cache.test.ts (2 tests) 2ms
+ ✓ lib/query-focus.test.ts (3 tests) 2ms
+ ✓ lib/home-starts-tomorrow.test.ts (1 test) 2ms
+ ✓ lib/follow-invalidate.test.ts (2 tests) 4ms
+ ✓ lib/home-away-count.test.ts (4 tests) 2ms
+ ✓ backend/lib/join-errors.test.ts (2 tests) 2ms
+ ✓ lib/auth-helpers.test.ts (2 tests) 2ms
+ ✓ lib/remote-config.test.ts (3 tests) 2ms
+ ✓ lib/discover-cover.test.ts (2 tests) 3ms
+ ✓ lib/iana-timezone-core.test.ts (4 tests) 20ms
+ ✓ lib/auth-expiry.test.ts (4 tests) 2ms
+ ✓ backend/lib/test-authors.test.ts (2 tests) 2ms
+ ✓ lib/home-secured-visuals.test.ts (2 tests) 1ms
+ ✓ lib/share-day-cells.test.ts (2 tests) 2ms
+ ✓ lib/feed-group.test.ts (2 tests) 2ms
+ ✓ lib/today-card.test.ts (1 test) 1ms
+ ✓ lib/photo-caption.test.ts (4 tests) 2ms
+ ✓ lib/photo-capture-meta.test.ts (3 tests) 5ms
+ ✓ lib/proof-url-cache.test.ts (2 tests) 2ms
+ ✓ lib/distance-unit.test.ts (2 tests) 5ms
+ ✓ lib/v51-format.test.ts (2 tests) 22ms
+ ✓ tests/flows/task-flow.test.ts (4 tests) 1ms
+ ✓ lib/profile-v2-badges.test.ts (1 test) 2ms
+ ✓ lib/gate-line.test.ts (3 tests) 1ms
+ ✓ lib/use-resend-countdown.test.ts (4 tests) 2ms
+ ✓ lib/story-card.test.ts (2 tests) 2ms
+ ✓ lib/account-display-name.test.ts (3 tests) 1ms
+ ✓ lib/freeze-earn.test.ts (2 tests) 1ms
+ ✓ lib/create-mode-copy.test.ts (1 test) 2ms
+ ✓ lib/photo-ready-start.test.ts (2 tests) 2ms
+ ✓ lib/celebration-removed.test.ts (1 test) 3ms
+ ✓ lib/post-thread.test.ts (2 tests) 6ms
+ ✓ lib/display-face.test.ts (1 test) 2ms
+ ✓ lib/proof-capture.test.ts (2 tests) 1ms
+ ✓ lib/task-capture.test.ts (1 test) 1ms
+ ✓ backend/lib/rate-limit-subject.test.ts (2 tests) 2ms
+ ✓ lib/wizard-saved-tasks.test.ts (2 tests) 2ms
+ ✓ lib/maestro-account.test.ts (2 tests) 2ms
+ ✓ lib/onboarding-v2-target-streak.test.ts (2 tests) 5ms
+ ✓ lib/signin-dark.test.ts (1 test) 2ms
+{"level":"info","time":"2026-10-19T05:56:40.401Z","pid":31680,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"accountability.invite","userId":"11111111-1111-4111-8111-111111111111","durationMs":0,"errorCode":"BAD_REQUEST","msg":"trpc accountability.invite BAD_REQUEST 0ms"}
+{"level":"error","time":"2026-10-19T05:56:40.402Z","pid":31680,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"accountability.invite","userId":"11111111-1111-4111-8111-111111111111","code":"BAD_REQUEST","message":"Accountability partners are now groups.","ts":"2026-10-19T05:56:40.402Z","msg":"trpc:error"}
+ ✓ lib/timer-duration.test.ts (3 tests) 2ms
+ ✓ backend/trpc/routes/accountability.test.ts (2 tests) 3ms
+ ✓ lib/format-days.test.ts (2 tests) 2ms
+ ✓ lib/feed-card-family.test.ts (2 tests) 2ms
+ ✓ lib/streak-pill.test.ts (4 tests) 2ms
+ ✓ backend/server.boot-env.test.ts (1 test) 1ms
+ ✓ lib/uploadProofImage.test.ts (2 tests) 2ms
+ ✓ lib/analytics-usage.test.ts (2 tests) 1ms
+ ✓ lib/edit-profile-ds.test.ts (1 test) 2ms
+ ✓ lib/crop-to-45.test.ts (2 tests) 1ms
+ ✓ lib/profile-bootstrap-source.test.ts (1 test) 1ms
+ ✓ lib/email-save-pending.test.ts (1 test) 1ms
+ ✓ lib/analytics-identity.test.ts (2 tests) 3ms
+ ✓ lib/v48-week-strip.test.ts (1 test) 1ms
+ ✓ backend/lib/profile-tier.test.ts (1 test) 1ms
+ ✓ lib/counter.test.ts (1 test) 2ms
+ ✓ lib/live-activity.test.ts (1 test) 3ms
+ ✓ lib/signup-username-check.test.ts (1 test) 2ms
+ ✓ backend/lib/feed-respect-counts.test.ts (1 test) 1ms
+ ✓ lib/feed-count.test.ts (1 test) 1ms
+ ✓ lib/login-can-submit.test.ts (2 tests) 1ms
+ ✓ lib/onboarding-v2-notifications.test.ts (1 test) 1ms
+ ✓ lib/about-line.test.ts (2 tests) 2ms
+ ✓ lib/checkin-log.test.ts (2 tests) 1ms
+ ✓ lib/run-log.test.ts (2 tests) 2ms
+ ✓ lib/workout-log.test.ts (2 tests) 1ms
+ ✓ lib/use-home-bootstrap.test.ts (1 test) 1ms
+ ✓ contexts/AuthContext.test.ts (1 test) 1ms
+ ✓ lib/onboarding-v2-why-circle.test.ts (1 test) 1ms
+ ✓ backend/lib/simple-verification.test.ts (1 test) 1ms
+ ✓ lib/journal-log.test.ts (1 test) 1ms
+ ✓ lib/feature-flags.test.ts (1 test) 1ms
+ ✓ backend/lib/required-remaining.test.ts (2 tests) 1ms
+{"level":"info","time":"2026-10-19T05:56:41.048Z","pid":31809,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"respects.give","userId":"11111111-1111-4111-8111-111111111111","durationMs":0,"errorCode":"BAD_REQUEST","msg":"trpc respects.give BAD_REQUEST 0ms"}
+{"level":"error","time":"2026-10-19T05:56:41.048Z","pid":31809,"hostname":"Yaseens-MacBook-Pro.local","requestId":"test","path":"respects.give","userId":"11111111-1111-4111-8111-111111111111","code":"BAD_REQUEST","message":"Respects are on feed posts.","ts":"2026-10-19T05:56:41.048Z","msg":"trpc:error"}
+ ✓ backend/trpc/routes/respects.test.ts (1 test) 3ms
+ ✓ backend/lib/streak-removed.test.ts (1 test) 2523ms
+   ✓ old streak helper removed > has no source file and no remaining references 2523ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  lib/challenge-detail-mapping.test.ts > taskGates > detail / Home / review proof line is gateLabel including By
+AssertionError: expected '/**\n * Launched — "You\'re in." plus…' to contain 'gateLabel(first)'
+
+- Expected
++ Received
+
+- gateLabel(first)
++ /**
++  * Launched — "You're in." plus first-task card (104–105 / 116).
++  */
++ import React, { useState } from "react";
++ import { StyleSheet, Text, View } from "react-native";
++ import { SafeAreaView } from "react-native-safe-area-context";
++ import { DS_V3 } from "@/lib/design-system";
++ import Button from "@/components/ds/Button";
++ import ListRow from "@/components/ds/ListRow";
++ import Switch from "@/components/ds/Switch";
++ import { StatusRing } from "@/components/home/HomeV3";
++ import { launchedFirstCard } from "@/lib/create-launched";
++ import { gateLabel } from "@/lib/task-ui";
++ import { fmt12 } from "@/lib/time-gate-picker";
++ import {
++   LAUNCHED_BACK_HOME,
++   LAUNCHED_BACK_TODAY,
++   LAUNCHED_REMINDER_CAPTION,
++   LAUNCHED_TODAY_TITLE,
++   LAUNCHED_TOMORROW_TITLE,
++   launchedReminderLabel,
++ } from "@/lib/late-join-copy";
++ import type { WizardTask } from "@/components/create/v2/StepTasks";
++ import InviteSheet from "@/components/InviteSheet";
++
++ export function LaunchedScreen({
++   title,
++   challengeId,
++   group,
++   tomorrow,
++   tasks,
++   timeZone,
++   day1Line,
++   onHome,
++   onInvite,
++   onStartToday,
++ }: {
++   title: string;
++   /** Build 90 08.1 → Build 92 08.3: the invite sheet (short link, Share, Copy link). */
++   challengeId?: string;
++   days: number;
++   group: boolean;
++   tomorrow: boolean;
++   tasks: WizardTask[];
++   timeZone: string;
++   day1Line: string;
++   onHome: () => void;
++   onInvite?: () => void;
++   onStartToday?: () => void;
++ }) {
++   const card = launchedFirstCard({ tasks, timeZone });
++   const first = card.first;
++   const [remind, setRemind] = useState(true);
++   const reminderTime =
++     first?.gateTime?.start != null
++       ? fmt12(minusMinutes(first.gateTime.start, 15))
++       : null;
++
++   return (
++     <SafeAreaView edges={["top", "bottom"]} style={styles.flex}>
++       <View style={styles.body}>
++         <Text style={styles.title}>{tomorrow ? LAUNCHED_TOMORROW_TITLE : LAUNCHED_TODAY_TITLE}</Text>
++         <Text style={styles.secondary}>{day1Line}</Text>
++         {tasks.map((task, index) => (
++           <View key={`${task.name}-${index}`} style={styles.card}>
++             <ListRow
++               icon={
++                 <StatusRing
++                   row={{
++                     id: task.name,
++                     name: task.name,
++                     type: "check_off",
++                     caption: gateLabel(task),
++                     done: false,
++                     closed: false,
++                     hasCameraProof: false,
++                   }}
++                 />
++               }
++               title={task.name}
++               subtitle={index === 0 ? card.opensAt ?? gateLabel(task) : gateLabel(task)}
++               divider={false}
++             />
++           </View>
++         ))}
++         {challengeId ? <InviteSheet challengeId={challengeId} challengeName={title} /> : null}
++         {tomorrow && reminderTime ? (
++           <View style={styles.remind}>
++             <View style={styles.remindCopy}>
++               <Text style={styles.bodyStrong}>{launchedReminderLabel(reminderTime)}</Text>
++               <Text style={styles.caption}>{LAUNCHED_REMINDER_CAPTION}</Text>
++             </View>
++             <Switch value={remind} onValueChange={setRemind} accessibilityLabel="Remind me" />
++           </View>
++         ) : null}
++       </View>
++       <View style={styles.footer}>
++         {group && onInvite ? (
++           <Button label="Invite friends" variant="secondary" onPress={onInvite} />
++         ) : null}
++         {!tomorrow && first && onStartToday ? (
++           <Button label={`Start today: ${first.name}`} onPress={onStartToday} />
++         ) : null}
++         <Button
++           label={tomorrow ? LAUNCHED_BACK_TODAY : LAUNCHED_BACK_HOME}
++           variant={tomorrow || !card.nextLabel ? "primary" : "tertiary"}
++           onPress={onHome}
++         />
++       </View>
++     </SafeAreaView>
++   );
++ }
++
++ function minusMinutes(hhmm: string, minutes: number): string {
++   const [h, m] = hhmm.split(":").map(Number);
++   const total = Math.max(0, (h ?? 0) * 60 + (m ?? 0) - minutes);
++   const hh = Math.floor(total / 60);
++   const mm = total % 60;
++   return `${String(hh).padStart(2, "0")}:${String(mm).padStart(2, "0")}`;
++ }
++
++ const styles = StyleSheet.create({
++   flex: { flex: 1, backgroundColor: DS_V3.color.canvas },
++   body: {
++     flex: 1,
++     paddingHorizontal: DS_V3.space.gutter,
++     paddingTop: DS_V3.space.xs * 16,
++     gap: DS_V3.space.md,
++   },
++   title: {
++     fontSize: DS_V3.type.title.fontSize,
++     lineHeight: DS_V3.type.title.lineHeight,
++     fontWeight: DS_V3.type.title.fontWeight,
++     color: DS_V3.color.textPrimary,
++   },
++   secondary: {
++     fontSize: DS_V3.type.secondary.fontSize,
++     lineHeight: DS_V3.type.secondary.lineHeight,
++     fontWeight: DS_V3.type.secondary.fontWeight,
++     color: DS_V3.color.textSecondary,
++   },
++   card: {
++     backgroundColor: DS_V3.color.surface,
++     borderRadius: DS_V3.radius.card,
++     overflow: "hidden",
++     marginHorizontal: -DS_V3.space.gutter,
++   },
++   remind: {
++     flexDirection: "row",
++     alignItems: "center",
++     gap: DS_V3.space.lg,
++     minHeight: DS_V3.size.tap,
++   },
++   remindCopy: { flex: 1, gap: DS_V3.space.xs },
++   bodyStrong: {
++     fontSize: DS_V3.type.bodyStrong.fontSize,
++     lineHeight: DS_V3.type.bodyStrong.lineHeight,
++     fontWeight: DS_V3.type.bodyStrong.fontWeight,
++     color: DS_V3.color.textPrimary,
++   },
++   caption: {
++     fontSize: DS_V3.type.caption.fontSize,
++     lineHeight: DS_V3.type.caption.lineHeight,
++     fontWeight: DS_V3.type.caption.fontWeight,
++     color: DS_V3.color.textSecondary,
++   },
++   footer: {
++     paddingHorizontal: DS_V3.space.gutter,
++     paddingBottom: DS_V3.space.gutter,
++     gap: DS_V3.space.sm,
++   },
++ });
++
+
+ ❯ lib/challenge-detail-mapping.test.ts:107:22
+    105|       "utf8",
+    106|     );
+    107|     expect(launched).toContain("gateLabel(first)");
+       |                      ^
+    108|   });
+    109| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯
+
+ FAIL  lib/challenge-detail-mapping.test.ts > detailTaskRequired > Daily Gratitude: Write 3 is required, Share one is optional
+AssertionError: expected 'import React, { useMemo, useCallback,…' to contain '(cfg?.required ?? true) === true'
+
+- Expected
++ Received
+
+- (cfg?.required ?? true) === true
++ import React, { useMemo, useCallback, useEffect } from "react";
++ import {
++   View,
++   Text,
++   StyleSheet,
++ } from "react-native";
++ import { FlashList } from "@shopify/flash-list";
++ import { useSafeAreaInsets } from "react-native-safe-area-context";
++ import Screen from "@/components/ds/Screen";
++ import AsyncStorage from "@react-native-async-storage/async-storage";
++ import { useLocalSearchParams, useRouter } from "expo-router";
++ import { useFocusEffect } from "@react-navigation/native";
++ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
++ import { useApp } from "@/contexts/AppContext";
++ import { supabase } from "@/lib/supabase";
++ import { useAuth } from "@/contexts/AuthContext";
++ import { useIsGuest } from "@/contexts/AuthGateContext";
++ import { useHomeBootstrap } from "@/lib/use-home-bootstrap";
++ import { traceMark } from "@/lib/startup-trace";
++ import { refreshHomeBootstrap } from "@/lib/home-bootstrap-refresh";
++ import { useReconcileStreakIfNeeded } from "@/lib/use-reconcile-streak";
++ import { ROUTES } from "@/lib/routes";
++ import { taskCompleteHref } from "@/lib/task-complete-href";
++ import { setCreateChooserToday } from "@/lib/create-chooser";
++ import { buildTaskConfigParam } from "@/lib/build-task-config-param";
++ import { HomeV3 } from "@/components/home/HomeV3";
++ import { StarterTodayRow } from "@/components/home/StarterTodayRow";
++ import { SaveStreakSheet } from "@/components/home/SaveStreakSheet";
++ import { shouldShowSaveStreak } from "@/lib/save-streak-prompt";
++ import { conceptLine, type ConceptKind } from "@/lib/concept-once";
++ import { markConceptSeen, readConceptSeen } from "@/lib/concept-seen";
++ import { FREEZE_HELD } from "@/lib/words";
++ import { WordsInfoButton, WordsSheet } from "@/components/words/WordsSheet";
++ import { earliestEnrollmentStart, firstNameFromAuth, firstWeekDay, greeting, homeScreenDate } from "@/lib/greeting";
++ import { firstWeekStripDays } from "@/lib/week-strip-days";
++ import { useTaskCompleteFlash } from "@/components/task-v2/TaskCompleteToast";
++ import { currentTaskToast, publishTaskToast, setToastAction, subscribeTaskToast } from "@/lib/task-complete-toast";
++ import LiveFeedSection from "@/components/LiveFeedSection";
++ import ScreenChrome from "@/components/ds/ScreenChrome";
++ import DayStickerSheet from "@/components/share/DayStickerSheet";
++ import { selectHomeProofCard, taskDisplayName } from "@/lib/home-proof-card";
++ import { homeTaskPartialLine } from "@/lib/partial-log";
++ import {
++   mergeOptimisticCheckins,
++   optimisticSaveError,
++   optimisticTaskDones,
++   runOptimisticRetry,
++   subscribeOptimisticHome,
++ } from "@/lib/optimistic-home";
++ import {
++   closeTimeLabel,
++   pickStartTask,
++   startCtaLabel,
++   remainingWindowsClosed,
++   todayDay2Hero,
++   todayFirstDayLine,
++   windowClosesBanner,
++ } from "@/lib/g2a-home";
++ import { queuedHomeRows } from "@/lib/home-starts-tomorrow";
++ import { dateKeyFromIso, shownChallengeDay } from "@/lib/home-day-total";
++ import { completedTaskIds } from "@/lib/today-completion";
++ import { enrollmentStarted, requiredTasks } from "@/lib/today-counts";
++ import { hasCameraProof, mapDifficulty } from "@/lib/active-challenge-ui";
++ import { stravaVerifiedBy } from "@/lib/strava-verify";
++ import { StreakSheet } from "@/components/home/StreakSheet";
++ import { freezeRefillDateLabel } from "@/lib/freeze-sheet";
++ import { canOfferYesterdayFreeze, weekdayLongForDateKey } from "@/lib/freeze-recovery";
++ import { activeChallengesAreHard } from "@/lib/secured-since";
++ import { proofPhotoUrlFromCheckIn } from "@/backend/lib/proof-predicate";
++ import { homeSecuredToday } from "@/lib/home-secured-visuals";
++ import { buildWeekStripDays } from "@/lib/week-strip-days";
++ import { type StreakHeroV4Task } from "@/components/home/StreakHeroV4";
++ import { resolveDisplayedStreak, resolveHomeStatsReady, resolveHomeTimeZone } from "@/lib/home-streak";
++ import { getDeviceIanaTimeZone } from "@/lib/iana-timezone";
++ import { DS_V3 } from "@/lib/design-system";
++ import { tabBarContentPad } from "@/lib/tab-bar-inset";
++ import {
++   EMPTY_SECURED_HEADER,
++   securedSinceLine,
++   type ProofsHeader,
++ } from "@/lib/secured-since";
++ import {
++   HOME_FEED_SCOPE_KEY,
++   defaultHomeFeedScope,
++   pickHomeInviteChallenge,
++   showHomeInviteCard,
++   type HomeFeedScope,
++ } from "@/lib/g2b-home";
++ import { countActiveEnrollments } from "@/lib/free-challenge-limit";
++ import { FreezeSheet } from "@/components/home/FreezeSheet";
++ import { trpcMutate, trpcQuery } from "@/lib/trpc";
++ import {
++   daysFromSource,
++   weekStripDaysUi,
++   weekStripFromDays,
++   type DaySource,
++ } from "@/lib/day-state";
++ import { TRPC } from "@/lib/trpc-paths";
++ import { captureError } from "@/lib/sentry";
++ import { inlineServerError } from "@/lib/inline-server-error";
++ import { FREEZE_SUCCESS_INVALIDATES } from "@/lib/freeze-sheet";
++ import { getTodayDateKey, getYesterdayDateKey, getCurrentWeekDateKeys } from "@/lib/date-utils";
++ import { ErrorBoundary } from "@/components/ErrorBoundary";
++ import { track, trackUsage } from "@/lib/analytics";
++ import { FLAGS } from "@/lib/feature-flags";
++ import {
++   EMPTY_HOME_STARTER_BODY,
++   EMPTY_HOME_STARTER_CHALLENGE_ID,
++   EMPTY_HOME_STARTER_CTA,
++   EMPTY_HOME_STARTER_TITLE,
++ } from "@/lib/empty-home-starter";
++ import { ensureAnonymousSession } from "@/lib/anon-auth";
++ import type { JoinWithFirstTask } from "@/lib/open-first-task";
++ import { firstTaskHrefAfterJoin } from "@/lib/enrich-join-first-task";
++ import Button from "@/components/ds/Button";
++ import { computeHomeState } from "@/lib/home-state";
++ import {
++   MISS_ACK_STORAGE_KEY,
++   missAckPayload,
++   missAckStorageKey,
++   morningAfterCost,
++   morningAfterCushion,
++   morningAfterFreezeCaption,
++   morningAfterKeepsLostStreak,
++   morningAfterVariant,
++   morningAfterVisible,
++   morningAfterYesterdayWasDue,
++ } from "@/lib/morning-after";
++ import {
++   parseTodaySectionChoice,
++   serializeTodaySectionChoice,
++   todaySectionCollapseKey,
++ } from "@/lib/today-section-collapse";
++ import type { StatsFromApi } from "@/types";
++
++ type TaskRow = {
++   id: string;
++   title?: string;
++   type?: string;
++   required?: boolean;
++   duration_minutes?: number | null;
++   require_photo?: boolean;
++   gates?: import("@/backend/lib/task-model").TaskGate[];
++   gateTime?: import("@/backend/lib/task-model").GateTime | null;
++   windowState?: import("@/backend/lib/task-time-gate").WindowState;
++   minutesLeft?: number | null;
++   config?: { required?: boolean } & Record<string, unknown>;
++ };
++ type ActiveRow = {
++   id: string;
++   challenge_id: string;
++   current_day?: number;
++   start_at?: string | null;
++   started_at?: string | null;
++   created_at?: string | null;
++   challenges?: {
++     id?: string;
++     title?: string;
++     duration_days?: number;
++     difficulty?: string | null;
++     is_hard_mode?: boolean | null;
++     challenge_tasks?: TaskRow[];
++   };
++ };
++
++ function durationMinutesFromTask(t: TaskRow): number | undefined {
++   if (typeof t.duration_minutes === "number" && t.duration_minutes > 0) return t.duration_minutes;
++   const fromCfg = t.config?.duration_minutes;
++   if (typeof fromCfg === "number" && fromCfg > 0) return fromCfg;
++   return undefined;
++ }
++
++ /** Build 90 04.7: a bootstrap this recent is not fetched again on Home focus. */
++ const HOME_FOCUS_FRESH_MS = 10_000;
++
++ export default function HomeScreen() {
++   const insets = useSafeAreaInsets();
++   const router = useRouter();
++   const queryClient = useQueryClient();
++   const { user } = useAuth();
++   const isGuest = useIsGuest();
++   const { stats, refetchAll, profile: contextProfile, completeTask } = useApp();
++   const [showFreezeSheet, setShowFreezeSheet] = React.useState(false);
++   const [conceptSeen, setConceptSeen] = React.useState<ReadonlySet<ConceptKind>>(new Set());
++   const [conceptBanner, setConceptBanner] = React.useState<string | null>(null);
++   const [wordsOpen, setWordsOpen] = React.useState(false);
++   // null until the flags are read, so a cold start cannot flash the sheet before the
++   // stored "Later" is known (06.6).
++   const [saveDismissed, setSaveDismissed] = React.useState<{ first: boolean; second: boolean } | null>(null);
++   const [postGate, setPostGate] = React.useState(false);
++   const [starterBusy, setStarterBusy] = React.useState(false);
++   const [optimisticRev, setOptimisticRev] = React.useState(0);
++   useEffect(() => subscribeOptimisticHome(() => setOptimisticRev((n) => n + 1)), []);
++   const focus = useLocalSearchParams<{ focus?: string }>().focus;
++   useEffect(() => {
++     if (focus === "freeze") setShowFreezeSheet(true);
++   }, [focus]);
++
++   useEffect(() => {
++     if (!user?.id) return;
++     void readConceptSeen(user.id).then(setConceptSeen);
++   }, [user?.id]);
++
++   useEffect(() => {
++     void Promise.all([
++       AsyncStorage.getItem("griit.saveStreak.dismissedFirst"),
++       AsyncStorage.getItem("griit.saveStreak.dismissedSecond"),
++     ]).then(([first, second]) => {
++       setSaveDismissed({ first: first === "1", second: second === "1" });
++     });
++   }, []);
++
++   const markConcept = useCallback((kind: ConceptKind) => {
++     setConceptSeen((prev) => {
++       if (prev.has(kind)) return prev;
++       const next = new Set(prev);
++       next.add(kind);
++       if (user?.id) void markConceptSeen(user.id, kind);
++       return next;
++     });
++   }, [user?.id]);
++   const [showStreakSheet, setShowStreakSheet] = React.useState(false);
++   const [taskToastUp, setTaskToastUp] = React.useState(false);
++   React.useEffect(
++     () =>
++       subscribeTaskToast((toast) => {
++         setTaskToastUp(toast != null);
++         if (toast) setShowStreakSheet(false);
++       }),
++     [],
++   );
++   const [streakHeld, setStreakHeld] = React.useState(false);
++   const [freezeError, setFreezeError] = React.useState<string | null>(null);
++   const [missAckDateKey, setMissAckDateKey] = React.useState<string | null | undefined>(undefined);
++   const [freezeSpent, setFreezeSpent] = React.useState(false);
++   const [sectionChoices, setSectionChoices] = React.useState<Record<string, boolean>>({});
++   const [shareTodayOpen, setShareTodayOpen] = React.useState(false);
++   const highlightTaskId = useTaskCompleteFlash();
++
++   const bootstrap = useHomeBootstrap(isGuest ? undefined : user?.id, { fromCache: true });
++   useEffect(() => {
++     traceMark("home_mount");
++   }, []);
++   const homeHasData = !!bootstrap.data;
++   useEffect(() => {
++     if (homeHasData) traceMark("home_data");
++   }, [homeHasData]);
++   const recordQuery = useQuery({
++     queryKey: ["profiles", "getRecord", user?.id ?? ""],
++     queryFn: () =>
++       trpcQuery(TRPC.profiles.getRecord) as Promise<{
++         consistency: {
++           verifiedClosed: number;
++           closedDueDays: number;
++           dueToday: boolean;
++           dueDayKeys: string[];
++         };
++         timezone?: string;
++         todayKey?: string;
++         daySource?: DaySource;
++         header?: ProofsHeader;
++         earliestStartKey?: string | null;
++       }>,
++     staleTime: 60 * 1000,
++     enabled: !isGuest && !!user?.id,
++   });
++   const [storedFeedScope, setStoredFeedScope] = React.useState<HomeFeedScope | null>(null);
++   const profile = (bootstrap.data?.profile ?? contextProfile) as typeof contextProfile;
++   const freezeStatus = bootstrap.data?.freezeStatus ?? null;
++   const statsFailed = bootstrap.data?.failed.includes("stats") === true;
++   const securedDateKeys = useMemo(
++     () => (Array.isArray(bootstrap.data?.securedDateKeys) ? bootstrap.data.securedDateKeys : []),
++     [bootstrap.data?.securedDateKeys],
++   );
++
++   const homeTimeZone = resolveHomeTimeZone(
++     (profile as { timezone?: string | null } | null)?.timezone,
++     getDeviceIanaTimeZone(),
++   );
++   const yesterdayKey = useMemo(() => getYesterdayDateKey(homeTimeZone), [homeTimeZone]);
++   const todayKey = useMemo(() => getTodayDateKey(homeTimeZone), [homeTimeZone]);
++
++   React.useEffect(() => {
++     if (!user?.id) {
++       setStoredFeedScope(null);
++       return;
++     }
++     void AsyncStorage.getItem(HOME_FEED_SCOPE_KEY(user.id)).then((raw) => {
++       if (raw === "following" || raw === "everyone") setStoredFeedScope(raw);
++     });
++   }, [user?.id]);
++
++   const recon = useReconcileStreakIfNeeded({
++     enabled: !isGuest && !!user?.id,
++     ready: bootstrap.isSuccess && !bootstrap.isPlaceholderData,
++     userId: user?.id,
++     stats: bootstrap.data?.stats ?? stats ?? null,
++     securedDateKeys: bootstrap.data?.securedDateKeys ?? null,
++     yesterdayKey,
++   });
++
++   React.useEffect(() => {
++     if (!user?.id) {
++       setMissAckDateKey(null);
++       return;
++     }
++     const scopedKey = missAckStorageKey(user.id);
++     void (async () => {
++       await AsyncStorage.removeItem(MISS_ACK_STORAGE_KEY);
++       const value = await AsyncStorage.getItem(scopedKey);
++       setMissAckDateKey(value);
++     })();
++   }, [user?.id]);
++
++   const heroTasks: StreakHeroV4Task[] = useMemo(() => {
++     const activeList = (Array.isArray(bootstrap.data?.activeChallenges)
++       ? bootstrap.data.activeChallenges
++       : []) as ActiveRow[];
++     const serverCheckins = (Array.isArray(bootstrap.data?.todayCheckinsForUser)
++       ? bootstrap.data.todayCheckinsForUser
++       : []) as {
++       active_challenge_id?: string;
++       task_id?: string;
++       status?: string;
++       value?: number | null;
++       verification_status?: string | null;
++       verified?: boolean | null;
++       photo_url?: string | null;
++       proof_url?: string | null;
++       completion_image_url?: string | null;
++       proof_photo_url?: string | null;
++       proof_source?: string | null;
++     }[];
++     const checkins = mergeOptimisticCheckins(serverCheckins, optimisticRev >= 0 ? optimisticTaskDones() : []);
++     const flat: StreakHeroV4Task[] = [];
++
++     for (const ac of activeList) {
++       // 05.4: same "started" and "required" rules as todayTaskCounts, so Home and Profile agree.
++       if (!enrollmentStarted(ac, todayKey, homeTimeZone)) continue;
++       const required = requiredTasks(ac.challenges?.challenge_tasks ?? []);
++       const doneRows = checkins.filter(
++         (c) => c.active_challenge_id === ac.id && c.status === "completed",
++       );
++       const doneSet = completedTaskIds(checkins, ac.id);
++       const proofByTask = new Map(
++         doneRows.map((c) => [
++           String(c.task_id),
++           hasCameraProof({
++             verified: c.verified === true,
++             proof_photo_url: c.proof_photo_url ?? proofPhotoUrlFromCheckIn(c),
++           }),
++         ]),
++       );
++       // 09.3: a Strava-verified completion says "Verified by Strava" in place of "Self-reported".
++       const verifiedByTask = new Map(doneRows.map((c) => [String(c.task_id), stravaVerifiedBy(c)]));
++       // Build 92 03.4: a short save leaves a pending row with today's total.
++       const pendingValueByTask = new Map(
++         checkins
++           .filter((c) => c.active_challenge_id === ac.id && c.status === "pending" && typeof c.value === "number")
++           .map((c) => [String(c.task_id), c.value as number]),
++       );
++       const challengeName = ac.challenges?.title ?? "Challenge";
++       const durationDays = ac.challenges?.duration_days ?? 14;
++       const startIso = ac.start_at ?? ac.started_at ?? ac.created_at ?? "";
++       const startDateKey = startIso ? dateKeyFromIso(String(startIso), homeTimeZone) : todayKey;
++       if (startDateKey > todayKey) continue;
++       const challengeSecuredToday =
++         required.length > 0 && required.every((t) => doneSet.has(t.id));
++       const currentDay = shownChallengeDay(startIso || null, homeTimeZone, todayKey, durationDays);
++
++       for (const t of required) {
++         const tType = String(t.type ?? "manual").toLowerCase();
++         flat.push({
++           id: t.id,
++           name: taskDisplayName({ title: t.title, type: tType }),
++           startDateKey,
++           description: challengeName,
++           proofType: tType.includes("photo") ? "photo" : "text",
++           done: doneSet.has(t.id),
++           activeChallengeId: ac.id,
++           challengeId: ac.challenge_id,
++           challengeName,
++           currentDay,
++           challengeSecuredToday,
++           durationDays,
++           taskType: tType,
++           taskConfig: buildTaskConfigParam(t as unknown as Record<string, unknown>),
++           durationMinutes: durationMinutesFromTask(t),
++           requirePhoto:
++             t.require_photo === true ||
++             t.config?.photo_required === true ||
++             t.config?.require_photo_proof === true ||
++             t.config?.require_photo === true,
++           type: t.type,
++           gates: t.gates,
++           gateTime: t.gateTime ?? null,
++           windowState: t.windowState ?? null,
++           minutesLeft: t.minutesLeft ?? null,
++           hasCameraProof: proofByTask.get(t.id) === true,
++           verifiedBy: verifiedByTask.get(t.id) ?? null,
++           partialLine: homeTaskPartialLine(t as unknown as Record<string, unknown>, tType, pendingValueByTask.get(t.id)),
++         });
++       }
++     }
++     return flat;
++   }, [bootstrap.data?.activeChallenges, bootstrap.data?.todayCheckinsForUser, homeTimeZone, todayKey, optimisticRev]);
++
++   const resolvedStats = statsFailed ? null : (bootstrap.data?.stats ?? stats);
++   const offerYesterdayFreeze = useMemo(() => {
++     const activeList = (Array.isArray(bootstrap.data?.activeChallenges)
++       ? bootstrap.data.activeChallenges
++       : []) as ActiveRow[];
++     const hardOnly =
++       activeList.length > 0 &&
++       activeList.every(
++         (row) =>
++           mapDifficulty({
++             isHardMode: row.challenges?.is_hard_mode,
++             difficulty: row.challenges?.difficulty,
++           }) === "hard",
++       );
++     return canOfferYesterdayFreeze({
++       hardMode: hardOnly,
++       freezesRemaining: freezeStatus?.remaining ?? 0,
++       missDateKey: yesterdayKey,
++       todayKey,
++       securedDateKeys,
++       frozenDateKeys: (resolvedStats as StatsFromApi | null)?.frozenDateKeys ?? [],
++     });
++   }, [
++     bootstrap.data?.activeChallenges,
++     freezeStatus?.remaining,
++     resolvedStats,
++     securedDateKeys,
++     todayKey,
++     yesterdayKey,
++   ]);
++   const statsReady = resolveHomeStatsReady({
++     queryFetched: bootstrap.isFetched,
++     queryData: bootstrap.data?.stats,
++     contextStats: statsFailed ? null : stats,
++     statsFailed,
++   });
++   const uDays = useMemo(
++     () =>
++       daysFromSource(recordQuery.data?.daySource, homeTimeZone, {
++         todayKey: recordQuery.data?.todayKey,
++       }),
++     [recordQuery.data?.daySource, recordQuery.data?.todayKey, homeTimeZone],
++   );
++   // Build 92 06.2: Streak reads the server's user_stats; nothing is recomputed from the day array.
++   const streak = resolveDisplayedStreak(
++     statsReady,
++     resolvedStats?.user_stats?.current_streak ?? resolvedStats?.activeStreak,
++   );
++   const dueDayKeys = recordQuery.data?.consistency?.dueDayKeys ?? [];
++   const header = recordQuery.data?.header ?? EMPTY_SECURED_HEADER;
++   const streakLine = securedSinceLine(header);
++   const feedScope = defaultHomeFeedScope(
++     bootstrap.data?.followCounts?.following ?? 0,
++     storedFeedScope,
++   );
++   const onFeedScopeChange = useCallback(
++     (next: HomeFeedScope) => {
++       setStoredFeedScope(next);
++       if (!user?.id) return;
++       void AsyncStorage.setItem(HOME_FEED_SCOPE_KEY(user.id), next);
++     },
++     [user?.id],
++   );
++
++   const todaySecured = useMemo(
++     () => homeSecuredToday(securedDateKeys, getTodayDateKey(homeTimeZone)),
++     [securedDateKeys, homeTimeZone]
++   );
++
++   useEffect(() => {
++     if (!todaySecured) return;
++     const line = conceptLine("secured", conceptSeen);
++     if (!line) return;
++     setConceptBanner(line);
++     markConcept("secured");
++   }, [todaySecured, conceptSeen, markConcept]);
++
++   // Build 92 10.5: Verified is defined once, the first time a camera or Strava proof is in.
++   const anyVerifiedDone = heroTasks.some((t) => t.done && (t.verifiedBy != null || t.proofType === "photo"));
++   useEffect(() => {
++     if (!anyVerifiedDone || todaySecured) return;
++     const line = conceptLine("verified", conceptSeen);
++     if (!line) return;
++     setConceptBanner(line);
++     markConcept("verified");
++   }, [anyVerifiedDone, todaySecured, conceptSeen, markConcept]);
++
++   const morningAfter = useMemo(() => {
++     if (freezeSpent || missAckDateKey === undefined || recon.result == null) return null;
++     const statsRow = resolvedStats as StatsFromApi | null;
++     const lostStreak = recon.result.lostStreak;
++     const yesterdayDue = morningAfterYesterdayWasDue(
++       yesterdayKey,
++       dueDayKeys,
++       recon.result.total ?? 0,
++     );
++     if (!yesterdayDue && !morningAfterKeepsLostStreak(lostStreak, missAckDateKey, yesterdayKey)) {
++       return null;
++     }
++     const variant = morningAfterVariant({
++       lastStandUsed: Boolean(
++         recon.result.lastStandUsedThisSession || statsRow?.lastStandUsedThisSession,
++       ),
++       reset: Boolean(recon.result.streak_broken || statsRow?.streakLostNoLastStand),
++       freezeRemaining: freezeStatus?.remaining ?? 0,
++       lostStreak,
++     });
++     const keepLost = morningAfterKeepsLostStreak(lostStreak, missAckDateKey, yesterdayKey);
++     if (
++       !keepLost &&
++       (!morningAfterVisible(variant, missAckDateKey, yesterdayKey) || variant == null)
++     ) {
++       return null;
++     }
++     if (variant == null) return null;
++     return {
++       cost: morningAfterCost(
++         recon.result.done ?? 0,
++         recon.result.total ?? 0,
++         recon.result.missedTaskNames ?? [],
++       ),
++       cushion: morningAfterCushion(variant, {
++         longest: statsRow?.longestStreak ?? 0,
++         lastStandsLeft: recon.result.lastStandsAvailable ?? statsRow?.lastStandsAvailable ?? 0,
++         previousStreak: recon.result.previous_streak ?? lostStreak,
++         todaySecured,
++       }),
++       freezeCaption: variant === "freeze" ? morningAfterFreezeCaption(freezeStatus?.remaining ?? 0) : null,
++       onDismiss: () => {
++         if (!user?.id) return;
++         const ack = missAckPayload(user.id, yesterdayKey);
++         setMissAckDateKey(ack.value);
++         void AsyncStorage.setItem(ack.key, ack.value);
++       },
++       onUseFreeze: variant === "freeze" ? () => {
++         setFreezeError(null);
++         setShowFreezeSheet(true);
++       } : undefined,
++     };
++   }, [dueDayKeys, freezeSpent, freezeStatus?.remaining, missAckDateKey, recon.result, resolvedStats, user?.id, yesterdayKey, todaySecured]);
++
++   const heroMetrics = useMemo(() => {
++     const totalTasksToday = heroTasks.length;
++     const tasksDoneToday = heroTasks.filter((t) => t.done).length;
++     const tasksRemaining = Math.max(0, totalTasksToday - tasksDoneToday);
++     const now = new Date();
++     const midnight = new Date(now);
++     midnight.setHours(24, 0, 0, 0);
++     const minutesRemaining = Math.floor(
++       (midnight.getTime() - now.getTime()) / 60000,
++     );
++     return { totalTasksToday, tasksDoneToday, tasksRemaining, minutesRemaining };
++   }, [heroTasks]);
++
++   const homeState = useMemo(
++     () =>
++       computeHomeState({
++         streak: streak ?? 0,
++         tasksRemaining: heroMetrics.tasksRemaining,
++         minutesToMidnight: heroMetrics.minutesRemaining,
++       }),
++     [streak, heroMetrics.tasksRemaining, heroMetrics.minutesRemaining],
++   );
++
++   const lastHomeStateFiredRef = React.useRef<string | null>(null);
++   React.useEffect(() => {
++     if (!FLAGS.PR3_HOME_STATE_ANALYTICS) return;
++     if (streak == null) return;
++     if (lastHomeStateFiredRef.current === homeState) return;
++     lastHomeStateFiredRef.current = homeState;
++     track({ name: "home_state_viewed", state: homeState, streak });
++   }, [homeState, streak]);
++
++   // Week strip — Mon→Sun in profile IANA, else device IANA.
++   // getTodayDateKey(undefined) is UTC: Friday 10:23pm ET highlights Saturday.
++   const weekDateKeys = useMemo(() => getCurrentWeekDateKeys(homeTimeZone), [homeTimeZone]);
++
++   const todayWeekIndex = useMemo(() => {
++     const todayKey = getTodayDateKey(homeTimeZone);
++     const idx = weekDateKeys.indexOf(todayKey);
++     return idx >= 0 ? idx : 0;
++   }, [weekDateKeys, homeTimeZone]);
++
++   const weekStates = useMemo(() => {
++     if (uDays.length) {
++       return weekStripDaysUi(weekStripFromDays(uDays, homeTimeZone, recordQuery.data?.todayKey)).map(
++         (d) => d.state,
++       );
++     }
++     const statsRow = resolvedStats as StatsFromApi | null;
++     return buildWeekStripDays(weekDateKeys, {
++       securedDateKeys,
++       frozenDateKeys: statsRow?.frozenDateKeys ?? [],
++       lastStandDateKeys: statsRow?.lastStandDateKeys ?? [],
++       todayKey: weekDateKeys[todayWeekIndex] ?? "",
++       todaySecured,
++     }).map((d) => d.state);
++   }, [uDays, homeTimeZone, recordQuery.data?.todayKey, weekDateKeys, securedDateKeys, todaySecured, todayWeekIndex, resolvedStats]);
++
++   const homeStrip = useMemo(() => {
++     const starts = heroTasks
++       .map((task) => task.startDateKey)
++       .filter((key): key is string => typeof key === "string" && key <= todayKey);
++     const earliest = earliestEnrollmentStart([
++       recordQuery.data?.earliestStartKey,
++       ...starts,
++     ]);
++     const day = firstWeekDay(todayKey, earliest);
++     const statsRow = resolvedStats as StatsFromApi | null;
++     if (day && earliest) {
++       const days = firstWeekStripDays(earliest, {
++         securedDateKeys,
++         frozenDateKeys: statsRow?.frozenDateKeys ?? [],
++         lastStandDateKeys: statsRow?.lastStandDateKeys ?? [],
++         todayKey,
++         todaySecured,
++       });
++       return {
++         day,
++         letters: days.map((d) => d.letter),
++         states: days.map((d) => d.state),
++         todayIndex: day - 1,
++       };
++     }
++     return {
++       day: null as number | null,
++       letters: undefined as string[] | undefined,
++       states: weekStates.map((state, i) => {
++         const key = weekDateKeys[i];
++         return earliest && key && key < earliest && state === "missed" ? ("before" as const) : state;
++       }),
++       todayIndex: todayWeekIndex,
++     };
++   }, [heroTasks, todayKey, resolvedStats, securedDateKeys, todaySecured, weekStates, weekDateKeys, todayWeekIndex, recordQuery.data?.earliestStartKey]);
++
++   const useFreeze = useMutation({
++     mutationKey: ["streaks", "useFreeze", user?.id ?? ""],
++     mutationFn: () =>
++       trpcMutate<{ restoredStreak: number; remaining: number }>(TRPC.streaks.useFreeze, {
++         dateKeyToFreeze: yesterdayKey,
++       }),
++       onSuccess: (data) => {
++       // 06.7: the result shows every time; the definition joins it the first time.
++       const line = conceptLine("freeze", conceptSeen);
++       const result = FREEZE_HELD(data?.restoredStreak ?? 0);
++       setConceptBanner(line ? `${line} ${result}` : result);
++       if (line) markConcept("freeze");
++       trackUsage("freeze_used");
++       setFreezeSpent(true);
++       setStreakHeld(true);
++       setShowFreezeSheet(false);
++       setFreezeError(null);
++       if (user?.id) {
++         const ack = missAckPayload(user.id, yesterdayKey);
++         setMissAckDateKey(ack.value);
++         void AsyncStorage.setItem(ack.key, ack.value);
++       }
++       for (const queryKey of FREEZE_SUCCESS_INVALIDATES) {
++         void queryClient.invalidateQueries({ queryKey: [...queryKey] });
++       }
++     },
++     onError: (err) => {
++       captureError(err, "useFreeze");
++       setFreezeError(inlineServerError(err));
++     },
++   });
++
++   const refetchBootstrap = bootstrap.refetch;
++   useFocusEffect(
++     useCallback(() => {
++       if (isGuest || !user?.id) return;
++       // Build 90 04.7: join a fetch in flight (a finish just started one) instead of restarting it,
++       // and skip it when the payload is seconds old (coming back from Day secured or the post).
++       void refreshHomeBootstrap(queryClient, { freshAfter: Date.now() - HOME_FOCUS_FRESH_MS });
++     }, [isGuest, user?.id, queryClient]),
++   );
++
++   // Build 90 06.6: Home stays mounted under a pushed route and its Modal would open over
++   // Day secured. The save sheet only shows while Home itself is the screen on top.
++   const [homeFocused, setHomeFocused] = React.useState(false);
++   useFocusEffect(
++     useCallback(() => {
++       setHomeFocused(true);
++       return () => setHomeFocused(false);
++     }, []),
++   );
++
++   const refresh = useCallback(async () => {
++     await Promise.all([refetchBootstrap(), refetchAll()]);
++     void queryClient.invalidateQueries({ queryKey: ["liveFeed"] });
++   }, [refetchBootstrap, refetchAll, queryClient]);
++
++   const onStartStarter = useCallback(async () => {
++     if (starterBusy) return;
++     setStarterBusy(true);
++     try {
++       const anon = await ensureAnonymousSession();
++       if (anon.kind !== "ok") return;
++       const result = (await trpcMutate(TRPC.challenges.join, {
++         challengeId: EMPTY_HOME_STARTER_CHALLENGE_ID,
++       })) as JoinWithFirstTask;
++       const href = await firstTaskHrefAfterJoin(result, EMPTY_HOME_STARTER_CHALLENGE_ID, "home");
++       await refresh();
++       if (href) router.replace(href as never);
++       else router.replace(ROUTES.TABS_HOME as never);
++     } catch (err) {
++       captureError(err, "HomeStarterJoin");
++     } finally {
++       setStarterBusy(false);
++     }
++   }, [starterBusy, refresh, router]);
++
++   // ────────────── handlers ──────────────
++
++   const onCheckOff = useCallback(
++     (taskId: string) => {
++       const task = heroTasks.find((row) => row.id === taskId);
++       if (!task || task.done) return;
++       void (async () => {
++         const result = await completeTask({
++           activeChallengeId: task.activeChallengeId,
++           taskId: task.id,
++         });
++         const completionId = result?.completionId;
++         setToastAction(() => {
++           if (!completionId) return;
++           void supabase.from("check_ins").delete().eq("id", completionId).then(() => {
++             void refresh();
++           });
++         });
++         const selfLine = conceptLine("self", conceptSeen);
++         if (selfLine) markConcept("self");
++         publishTaskToast({
++           taskId: task.id,
++           title: "Saved.",
++           body: selfLine ?? "Self-reported.",
++           photoUri: null,
++           cameraSeal: false,
++           actionLabel: "Undo",
++           lifeMs: 5000,
++           challengeName: task.challengeName,
++           taskName: task.name,
++         });
++         void refresh();
++       })();
++     },
++     [heroTasks, completeTask, refresh, conceptSeen, markConcept],
++   );
++
++   const onPressTask = useCallback(
++     (task: StreakHeroV4Task) => {
++       router.push(taskCompleteHref(task) as never);
++     },
++     [router],
++   );
++
++   const startTask = useMemo(
++     () =>
++       pickStartTask(
++         heroTasks.map((t) => ({
++           id: t.id,
++           name: t.name,
++           minutesLeft: t.minutesLeft,
++           gateTime: t.gateTime,
++           done: t.done,
++           closed: t.windowState === "closed",
++           challengeName: t.challengeName,
++           currentDay: t.currentDay,
++           durationDays: t.durationDays,
++         })),
++       ),
++     [heroTasks],
++   );
++
++   // Build 92 01.3: the Create chooser's "Log today's task" opens this same next task.
++   useEffect(() => {
++     const next = startTask ? heroTasks.find((t) => t.id === startTask.id) : undefined;
++     setCreateChooserToday({
++       todaySecured,
++       openTaskIds: heroTasks.filter((t) => !t.done && t.windowState !== "closed").map((t) => t.id),
++       nextTask: next
++         ? {
++             id: next.id,
++             href: taskCompleteHref(next),
++             title: next.name,
++             challengeName: next.challengeName,
++             currentDay: next.currentDay,
++             durationDays: next.durationDays,
++           }
++         : null,
++     });
++   }, [heroTasks, startTask, todaySecured]);
++
++   const onPressPrimaryCTA = useCallback(() => {
++     if (heroTasks.length === 0) {
++       track({ name: 'discover_challenge_tapped' });
++       router.push(ROUTES.TABS_DISCOVER as never);
++       return;
++     }
++     if (heroMetrics.tasksRemaining > 0) {
++       const next = startTask
++         ? heroTasks.find((t) => t.id === startTask.id)
++         : heroTasks.find((t) => !t.done);
++       if (next) {
++         track({ name: 'task_completed' });
++         onPressTask(next);
++       }
++       return;
++     }
++   }, [heroTasks, heroMetrics.tasksRemaining, onPressTask, router, startTask]);
++
++   const firstProofEver =
++     !statsFailed &&
++     (resolvedStats?.totalDaysSecured ?? 0) === 0 &&
++     securedDateKeys.length === 0;
++   const inviteTarget = pickHomeInviteChallenge(
++     (Array.isArray(bootstrap.data?.activeChallenges) ? bootstrap.data.activeChallenges : []) as {
++       challenge_id?: string | null;
++       challenges?: { id?: string | null; title?: string | null; participants_count?: number | null } | null;
++     }[],
++   );
++   const showInvite = showHomeInviteCard({
++     soleMember: inviteTarget?.soleMember === true,
++     firstDaySecured: !firstProofEver,
++   });
++
++   const proof = useMemo(
++     () =>
++       selectHomeProofCard({
++         tasks: heroTasks,
++         tasksDoneToday: heroMetrics.tasksDoneToday,
++         totalTasksToday: heroMetrics.totalTasksToday,
++         firstProofEver,
++         targetStreak: profile?.target_streak ?? null,
++         securedToday: todaySecured,
++         securedDateKeys,
++         profileTimeZone: (profile as { timezone?: string | null } | null)?.timezone,
++         now: new Date(),
++         todayKey,
++       }),
++     [heroTasks, heroMetrics.tasksDoneToday, heroMetrics.totalTasksToday, firstProofEver, profile?.target_streak, todaySecured, todayKey, securedDateKeys, profile],
++   );
++   // Build 92 10.3: one secured flag for the card and the Today block. The server's secured list
++   // lags a finish; the rows already know every task is done, so nothing may still say "Finish the task".
++   const proofAllDone = Boolean(proof.hasChallenge && proof.totalCount > 0 && proof.doneCount === proof.totalCount);
++   const securedNow = todaySecured || proofAllDone;
++
++   const startsTomorrow = useMemo(
++     () =>
++       queuedHomeRows(
++         bootstrap.data?.queuedChallenges as
++           | { id?: string; challenge_id?: string; challenges?: { id?: string; title?: string | null } | null }[]
++           | undefined,
++       ),
++     [bootstrap.data?.queuedChallenges],
++   );
++
++   const sectionIds = useMemo(() => proof.sections.map((s) => s.id).join("|"), [proof.sections]);
++
++   React.useEffect(() => {
++     if (!user?.id) {
++       setSectionChoices({});
++       return;
++     }
++     const ids = sectionIds ? sectionIds.split("|").filter(Boolean) : [];
++     void (async () => {
++       const entries = await Promise.all(
++         ids.map(async (id) => {
++           const raw = await AsyncStorage.getItem(todaySectionCollapseKey(user.id, id, todayKey));
++           return [id, parseTodaySectionChoice(raw)] as const;
++         }),
++       );
++       const next: Record<string, boolean> = {};
++       for (const [id, stored] of entries) {
++         if (stored === true || stored === false) next[id] = stored;
++       }
++       setSectionChoices(next);
++     })();
++   }, [user?.id, todayKey, sectionIds]);
++
++   const onToggleSection = useCallback(
++     (sectionId: string, expanded: boolean) => {
++       setSectionChoices((prev) => ({ ...prev, [sectionId]: expanded }));
++       if (!user?.id) return;
++       void AsyncStorage.setItem(
++         todaySectionCollapseKey(user.id, sectionId, todayKey),
++         serializeTodaySectionChoice(expanded),
++       );
++     },
++     [user?.id, todayKey],
++   );
++
++   const onPressChallenge = useCallback(
++     (challengeId: string) => {
++       router.push(ROUTES.CHALLENGE_ID(challengeId) as never);
++     },
++     [router],
++   );
++
++   // ────────────── render ──────────────
++
++   const guestKeyExtractor = useCallback((item: { key: string }) => item.key, []);
++
++   if (isGuest) {
++     return (
++       <ScreenChrome>
++       <Screen style={s.container} edges={["left", "right"]}>
++         <FlashList
++           data={[{ key: "guest-home" }]}
++           keyExtractor={guestKeyExtractor}
++           renderItem={() => (
++             <View style={[s.guestWrap, { paddingTop: insets.top + DS_V3.space.section }]}>
++               <Text style={s.guestTitle}>GRIIT</Text>
++               {FLAGS.STARTER_TASK_ENABLED ? (
++                 <View testID="home-starter-card">
++                   <Text style={s.guestBody}>{EMPTY_HOME_STARTER_TITLE}</Text>
++                   <Text style={s.guestBody}>{EMPTY_HOME_STARTER_BODY}</Text>
++                   <Button
++                     label={EMPTY_HOME_STARTER_CTA}
++                     onPress={() => void onStartStarter()}
++                     submitting={starterBusy}
++                     testID="home-starter-start"
++                   />
++                 </View>
++               ) : (
++                 <Text style={s.guestBody}>
++                   Sign in to start your discipline streak and see what your friends are doing.
++                 </Text>
++               )}
++             </View>
++           )}
++           contentContainerStyle={[s.guestList, { paddingBottom: tabBarContentPad(insets.bottom) }]}
++           showsVerticalScrollIndicator={false}
++         />
++       </Screen>
++       </ScreenChrome>
++     );
++   }
++
++   return (
++     <ErrorBoundary>
++       <ScreenChrome>
++       <Screen style={s.container} edges={["left", "right"]}>
++         <LiveFeedSection
++           onRefresh={refresh}
++           scope={feedScope}
++           onScopeChange={onFeedScopeChange}
++           activeChallengesCount={countActiveEnrollments(
++             (Array.isArray(bootstrap.data?.activeChallenges)
++               ? bootstrap.data.activeChallenges
++               : []) as { status?: string }[],
++           )}
++           viewerTargetStreak={bootstrap.data?.profile?.target_streak ?? null}
++           inviteChallenge={inviteTarget ? { id: inviteTarget.id, name: inviteTarget.name } : null}
++           showInvite={showInvite}
++           ListHeaderComponent={
++             <View>
++             <StarterTodayRow
++               challengeTitle={inviteTarget?.name ?? null}
++               durationDays={null}
++               onChanged={refresh}
++             />
++             <HomeV3
++               conceptSlot={
++                 conceptBanner || conceptSeen.size > 0 ? (
++                   <View style={s.conceptRow}>
++                     {conceptBanner ? (
++                       <Text style={[s.concept, s.conceptSpacer]} accessibilityRole="text">{conceptBanner}</Text>
++                     ) : (
++                       <View style={s.conceptSpacer} />
++                     )}
++                     {conceptSeen.size > 0 ? <WordsInfoButton onPress={() => setWordsOpen(true)} /> : null}
++                   </View>
++                 ) : null
++               }
++               title={greeting(
++                 new Date(),
++                 profile?.display_name,
++                 profile?.username ?? "",
++                 homeTimeZone,
++                 firstNameFromAuth(user),
++               )}
++               dateLine={homeScreenDate(new Date(), homeTimeZone)}
++               streak={streak}
++               streakToKeep={recon.result?.lostStreak ?? null}
++               streakLine={streakLine}
++               morningAfter={morningAfter}
++               proof={proof}
++               startsTomorrow={startsTomorrow}
++               weekStates={homeStrip.states}
++               weekLetters={homeStrip.letters}
++               todayIndex={homeStrip.todayIndex}
++               firstWeekDay={homeStrip.day}
++               fillToday={todaySecured}
++               daySecured={securedNow}
++               onFindChallenge={() => router.push(ROUTES.TABS_DISCOVER as never)}
++               onCreateChallenge={() => router.push(ROUTES.CREATE_WIZARD as never)}
++               onStartStarter={() => void onStartStarter()}
++               starterBusy={starterBusy}
++               onPressStreak={() => {
++                 if (currentTaskToast()) return;
++                 setFreezeError(null);
++                 setStreakHeld(false);
++                 setShowStreakSheet(true);
++               }}
++               onPressProof={onPressPrimaryCTA}
++               onPressTask={(id) => {
++                 const next = heroTasks.find((h) => h.id === id);
++                 if (!next || next.done) return;
++                 onPressTask(next);
++               }}
++               onCheckOff={onCheckOff}
++               onPressChallenge={onPressChallenge}
++               onPressShareToday={() => {
++                 if (user?.is_anonymous) {
++                   setPostGate(true);
++                   return;
++                 }
++                 setShareTodayOpen(true);
++               }}
++               sectionChoices={sectionChoices}
++               onToggleSection={onToggleSection}
++               freezesLeft={freezeStatus?.remaining ?? 0}
++               noDaysOff={activeChallengesAreHard(
++                 (Array.isArray(bootstrap.data?.activeChallenges)
++                   ? bootstrap.data.activeChallenges
++                   : []) as Parameters<typeof activeChallengesAreHard>[0],
++               )}
++               highlightTaskId={highlightTaskId}
++               loading={bootstrap.isPending && !bootstrap.data}
++               firstDayLine={
++                 !securedNow && proof.sections.some((s) => s.day === 1)
++                   ? todayFirstDayLine(proof.totalCount)
++                   : null
++               }
++               day2Hero={
++                 !securedNow &&
++                 proof.sections.some((s) => s.day >= 2) &&
++                 typeof streak === "number"
++                   ? todayDay2Hero(
++                       streak,
++                       remainingWindowsClosed(proof.sections.flatMap((s) => s.rows)),
++                     )
++                   : null
++               }
++               windowBanner={
++                 startTask && closeTimeLabel(startTask.gateTime)
++                   ? windowClosesBanner(startTask.name, closeTimeLabel(startTask.gateTime))
++                   : null
++               }
++               startLabel={
++                 !securedNow && startTask ? startCtaLabel(startTask.name) : null
++               }
++               bestStreak={resolvedStats?.longestStreak ?? streak}
++               nextTask={
++                 !securedNow && startTask ? { id: startTask.id, title: startTask.name } : null
++               }
++               showFirstProofSlot={firstProofEver && !securedNow}
++               saveError={optimisticSaveError()}
++               onRetrySave={runOptimisticRetry}
++             />
++             </View>
++           }
++         />
++         <SaveStreakSheet
++           visible={homeFocused && saveDismissed != null && shouldShowSaveStreak({
++             isAnonymous: user?.is_anonymous === true,
++             firstTaskDone: heroMetrics.tasksDoneToday > 0 || todaySecured,
++             securedDays: resolvedStats?.totalDaysSecured ?? 0,
++             aboutToPostPublic: postGate,
++             dismissedAfterFirst: saveDismissed.first,
++             dismissedAfterSecond: saveDismissed.second,
++           })}
++           onLater={() => {
++             setPostGate(false);
++             if ((resolvedStats?.totalDaysSecured ?? 0) >= 2) {
++               setSaveDismissed((prev) => ({ first: prev?.first ?? false, second: true }));
++               void AsyncStorage.setItem("griit.saveStreak.dismissedSecond", "1");
++               return;
++             }
++             setSaveDismissed((prev) => ({ first: true, second: prev?.second ?? false }));
++             void AsyncStorage.setItem("griit.saveStreak.dismissedFirst", "1");
++           }}
++           onSaved={() => setPostGate(false)}
++         />
++         <DayStickerSheet
++           visible={shareTodayOpen}
++           onDismiss={() => setShareTodayOpen(false)}
++           challenges={proof.shareTodayChallenges}
++           username={profile?.username}
++           streak={streak ?? undefined}
++           longestStreak={resolvedStats?.longestStreak}
++           activeLine={proof.shareTodayChallenges.map((c) => c.name).join(" · ")}
++           todayKey={todayKey}
++           securedDateKeys={securedDateKeys}
++           frozenDateKeys={(resolvedStats as { frozenDateKeys?: string[] } | null)?.frozenDateKeys ?? []}
++         />
++         <StreakSheet
++           visible={showStreakSheet && !taskToastUp}
++           held={streakHeld}
++           weekday={weekdayLongForDateKey(yesterdayKey, homeTimeZone)}
++           streak={streak ?? 0}
++           done={proof.doneCount}
++           total={proof.totalCount}
++           missed={(recon.result?.missedTaskNames ?? []).join(", ")}
++           freezesLeft={freezeStatus?.remaining ?? 0}
++           freezeCap={freezeStatus?.limit}
++           refill={freezeRefillDateLabel(freezeStatus?.lastFreezeUsedAt ?? null, homeTimeZone)}
++           week={["M", "T", "W", "T", "F", "S", "S"].map((letter, i) => ({
++             letter,
++             filled: weekStates[i] === "secured" || weekStates[i] === "frozen",
++             state: weekStates[i],
++           }))}
++           todayIndex={todayWeekIndex}
++           offerFreeze={offerYesterdayFreeze}
++           submitting={useFreeze.isPending}
++           error={freezeError}
++           onUse={() => {
++             setFreezeError(null);
++             useFreeze.mutate();
++           }}
++           onNotNow={() => {
++             setShowStreakSheet(false);
++             setFreezeError(null);
++           }}
++           onDone={() => {
++             setShowStreakSheet(false);
++             setStreakHeld(false);
++           }}
++         />
++         <FreezeSheet
++           visible={showFreezeSheet}
++           remaining={freezeStatus?.remaining ?? 0}
++           restoredStreakDays={recon.result?.lostStreak}
++           lastFreezeUsedAt={freezeStatus?.lastFreezeUsedAt ?? null}
++           timeZone={homeTimeZone}
++           subscriptionStatus={(profile as { subscription_status?: string | null } | null)?.subscription_status}
++           submitting={useFreeze.isPending}
++           error={freezeError}
++           onUseFreeze={() => {
++             setFreezeError(null);
++             useFreeze.mutate();
++           }}
++           onRefuse={() => {
++             setShowFreezeSheet(false);
++             setFreezeError(null);
++             if (!user?.id) return;
++             const ack = missAckPayload(user.id, yesterdayKey);
++             setMissAckDateKey(ack.value);
++             void AsyncStorage.setItem(ack.key, ack.value);
++           }}
++           onSeePro={() => {
++             setShowFreezeSheet(false);
++             setFreezeError(null);
++             router.push(ROUTES.PAYWALL as never);
++           }}
++           onClose={() => {
++             setShowFreezeSheet(false);
++             setFreezeError(null);
++           }}
++         />
++         <WordsSheet visible={wordsOpen && homeFocused} onDismiss={() => setWordsOpen(false)} />
++       </Screen>
++       </ScreenChrome>
++     </ErrorBoundary>
++   );
++ }
++
++ const s = StyleSheet.create({
++   container: { flex: 1, backgroundColor: DS_V3.color.canvas },
++   guestWrap: {
++     paddingHorizontal: DS_V3.space.gutter,
++     paddingTop: DS_V3.space.section,
++     gap: DS_V3.space.md,
++   },
++   guestList: {},
++   conceptRow: {
++     flexDirection: "row",
++     alignItems: "center",
++     gap: DS_V3.space.sm,
++     paddingHorizontal: DS_V3.space.gutter,
++     paddingTop: DS_V3.space.sm,
++   },
++   conceptSpacer: { flex: 1 },
++   concept: {
++     marginBottom: 8,
++     fontSize: 15,
++     lineHeight: 20,
++     color: "#F5F3EE",
++   },
++   guestTitle: {
++     fontSize: DS_V3.type.display.fontSize,
++     lineHeight: DS_V3.type.display.lineHeight,
++     fontWeight: DS_V3.type.display.fontWeight,
++     color: DS_V3.color.textPrimary,
++   },
++   guestBody: {
++     fontSize: DS_V3.type.body.fontSize,
++     lineHeight: DS_V3.type.body.lineHeight,
++     fontWeight: DS_V3.type.body.fontWeight,
++     color: DS_V3.color.textSecondary,
++   },
++ });
++
+
+ ❯ lib/challenge-detail-mapping.test.ts:130:18
+    128|     expect(detail).toContain("t.required === false");
+    129|     const home = readFileSync(resolve(__dirname, "../app/(tabs)/index.…
+    130|     expect(home).toContain("(cfg?.required ?? true) === true");
+       |                  ^
+    131|     const record = readFileSync(resolve(__dirname, "../backend/trpc/ro…
+    132|     expect(record).toContain("isTaskRequired");
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/4]⎯
+
+ FAIL  lib/featured-catalog-seed.test.ts > catalog SQL against column types > runs the applied seed, and rejects an untyped NULL for start_value
+Error: Failed to load url @electric-sql/pglite (resolved id: @electric-sql/pglite) in /Users/yaseenabdela/Developer/GRIIT/lib/featured-catalog-seed.test.ts. Does the file exist?
+ ❯ loadAndTransform node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:51969:17
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/4]⎯
+
+ FAIL  lib/join-challenge-error.test.ts > classifyJoinChallengeError > onboarding join moves on when the person is already in the challenge
+AssertionError: expected 'import { ensureAnonymousSession } fro…' to contain 'return { ok: true }'
+
+- Expected
++ Received
+
+- return { ok: true }
++ import { ensureAnonymousSession } from "@/lib/anon-auth";
++ import { trpcMutate } from "@/lib/trpc";
++ import { TRPC } from "@/lib/trpc-paths";
++ import { isJoinableChallengeId } from "@/lib/onboarding-v2-suggest";
++ import { classifyJoinChallengeError } from "@/lib/join-challenge-error";
++ import { queryClient } from "@/lib/query-client";
++ import { invalidateAfterOnboardingJoin } from "@/lib/onboarding-v2-invalidate";
++ import {
++   joinHasEnrollment,
++   setPendingFirstTaskHref,
++   type JoinWithFirstTask,
++ } from "@/lib/open-first-task";
++ import { firstTaskHrefAfterJoin } from "@/lib/enrich-join-first-task";
++
++ export type JoinFirstChallengeResult =
++   | { ok: true; href: string | null }
++   | { ok: false; message: string };
++
++ /**
++  * Guest-safe join: mint/reuse an anon session, then call challenges.join.
++  * Never throws — caller stays on the screen when ok is false.
++  * Duo waiting-room joins (no enrollment id) are treated as failure.
++  */
++ export async function joinFirstChallenge(challengeId: string): Promise<JoinFirstChallengeResult> {
++   if (!isJoinableChallengeId(challengeId)) {
++     return { ok: false, message: "This challenge can't be joined." };
++   }
++   const anon = await ensureAnonymousSession();
++   if (anon.kind !== "ok") {
++     return { ok: false, message: anon.message ?? "Could not start a guest session." };
++   }
++   try {
++     const result = (await trpcMutate(TRPC.challenges.join, {
++       challengeId,
++     })) as JoinWithFirstTask;
++     if (!joinHasEnrollment(result)) {
++       return {
++         ok: false,
++         message: "This challenge needs a partner first. Pick a solo challenge.",
++       };
++     }
++     const href = await firstTaskHrefAfterJoin(result, challengeId, "home");
++     setPendingFirstTaskHref(href);
++     await invalidateAfterOnboardingJoin(queryClient);
++     return { ok: true, href };
++   } catch (e) {
++     const classified = classifyJoinChallengeError(e);
++     if (classified.kind === "already") {
++       return { ok: true, href: null };
++     }
++     return { ok: false, message: classified.message || "Could not join. Try again." };
++   }
++ }
++
+
+ ❯ lib/join-challenge-error.test.ts:47:17
+     45|     const src = readFileSync(resolve(__dirname, "onboarding-v2-join.ts…
+     46|     expect(src).toContain('classified.kind === "already"');
+     47|     expect(src).toContain("return { ok: true }");
+       |                 ^
+     48|   });
+     49| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/4]⎯
+
+ Test Files  3 failed | 370 passed (373)
+      Tests  4 failed | 2303 passed (2307)
+   Start at  01:56:29
+   Duration  12.03s (transform 10.93s, setup 0ms, collect 56.44s, tests 10.04s, environment 40ms, prepare 27.91s)
+

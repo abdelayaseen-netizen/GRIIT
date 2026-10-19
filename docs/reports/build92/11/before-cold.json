@@ -1,0 +1,206 @@
+{
+ "mode": "cold",
+ "runs": [
+  {
+   "run": 1,
+   "t0": 1792387092248,
+   "phases": {
+    "native_launch": null,
+    "runtime_init": null,
+    "bundle_load": null,
+    "fonts": 113,
+    "session_restore": 147,
+    "profile_check": 191,
+    "bootstrap": 858,
+    "home_cache": null,
+    "first_render": 85,
+    "home_data": 1036,
+    "splash_hidden": 1922,
+    "overlay_gone": 342,
+    "js_start": 1351,
+    "interactive": 3273
+   },
+   "trace": {
+    "marks": {
+     "js_start": 1792387093599,
+     "home_mount": 1792387093684,
+     "fonts_loaded": 1792387093712,
+     "bootstrap_start": 1792387093746,
+     "session_restored": 1792387093746,
+     "profile_checked": 1792387093937,
+     "overlay_gone": 1792387093941,
+     "bootstrap_done": 1792387094604,
+     "home_data": 1792387094635,
+     "splash_hidden": 1792387095521
+    },
+    "native": {},
+    "interactive": 1792387095521,
+    "writtenAt": 1792387095537
+   }
+  },
+  {
+   "run": 2,
+   "t0": 1792387127627,
+   "phases": {
+    "native_launch": null,
+    "runtime_init": null,
+    "bundle_load": null,
+    "fonts": 120,
+    "session_restore": 153,
+    "profile_check": 385,
+    "bootstrap": 1036,
+    "home_cache": null,
+    "first_render": 94,
+    "home_data": 1218,
+    "splash_hidden": 1973,
+    "overlay_gone": 543,
+    "js_start": 1307,
+    "interactive": 3280
+   },
+   "trace": {
+    "marks": {
+     "js_start": 1792387128934,
+     "home_mount": 1792387129028,
+     "fonts_loaded": 1792387129054,
+     "bootstrap_start": 1792387129086,
+     "session_restored": 1792387129087,
+     "profile_checked": 1792387129472,
+     "overlay_gone": 1792387129477,
+     "bootstrap_done": 1792387130122,
+     "home_data": 1792387130152,
+     "splash_hidden": 1792387130907
+    },
+    "native": {},
+    "interactive": 1792387130907,
+    "writtenAt": 1792387130929
+   }
+  },
+  {
+   "run": 3,
+   "t0": 1792387163050,
+   "phases": {
+    "native_launch": null,
+    "runtime_init": null,
+    "bundle_load": null,
+    "fonts": 109,
+    "session_restore": 142,
+    "profile_check": 447,
+    "bootstrap": 944,
+    "home_cache": null,
+    "first_render": 83,
+    "home_data": 1112,
+    "splash_hidden": 1919,
+    "overlay_gone": 593,
+    "js_start": 1402,
+    "interactive": 3321
+   },
+   "trace": {
+    "marks": {
+     "js_start": 1792387164452,
+     "home_mount": 1792387164535,
+     "fonts_loaded": 1792387164561,
+     "bootstrap_start": 1792387164593,
+     "session_restored": 1792387164594,
+     "profile_checked": 1792387165041,
+     "overlay_gone": 1792387165045,
+     "bootstrap_done": 1792387165537,
+     "home_data": 1792387165564,
+     "splash_hidden": 1792387166371
+    },
+    "native": {},
+    "interactive": 1792387166371,
+    "writtenAt": 1792387166387
+   }
+  },
+  {
+   "run": 4,
+   "t0": 1792387198496,
+   "phases": {
+    "native_launch": null,
+    "runtime_init": null,
+    "bundle_load": null,
+    "fonts": 99,
+    "session_restore": 132,
+    "profile_check": 404,
+    "bootstrap": 1155,
+    "home_cache": null,
+    "first_render": 72,
+    "home_data": 1315,
+    "splash_hidden": 1903,
+    "overlay_gone": 541,
+    "js_start": 1272,
+    "interactive": 3175
+   },
+   "trace": {
+    "marks": {
+     "js_start": 1792387199768,
+     "home_mount": 1792387199840,
+     "fonts_loaded": 1792387199867,
+     "bootstrap_start": 1792387199899,
+     "session_restored": 1792387199900,
+     "profile_checked": 1792387200304,
+     "overlay_gone": 1792387200309,
+     "bootstrap_done": 1792387201054,
+     "home_data": 1792387201083,
+     "splash_hidden": 1792387201671
+    },
+    "native": {},
+    "interactive": 1792387201671,
+    "writtenAt": 1792387201687
+   }
+  },
+  {
+   "run": 5,
+   "t0": 1792387234032,
+   "phases": {
+    "native_launch": null,
+    "runtime_init": null,
+    "bundle_load": null,
+    "fonts": 101,
+    "session_restore": 133,
+    "profile_check": 410,
+    "bootstrap": 2114,
+    "home_cache": null,
+    "first_render": 74,
+    "home_data": 2281,
+    "splash_hidden": 1910,
+    "overlay_gone": 549,
+    "js_start": 1245,
+    "interactive": 3526
+   },
+   "trace": {
+    "marks": {
+     "js_start": 1792387235277,
+     "home_mount": 1792387235351,
+     "fonts_loaded": 1792387235378,
+     "bootstrap_start": 1792387235409,
+     "session_restored": 1792387235410,
+     "profile_checked": 1792387235820,
+     "overlay_gone": 1792387235826,
+     "splash_hidden": 1792387237187,
+     "bootstrap_done": 1792387237523,
+     "home_data": 1792387237558
+    },
+    "native": {},
+    "interactive": 1792387237558,
+    "writtenAt": 1792387237584
+   }
+  }
+ ],
+ "median": {
+  "native_launch": null,
+  "runtime_init": null,
+  "bundle_load": null,
+  "fonts": 109,
+  "session_restore": 142,
+  "profile_check": 404,
+  "bootstrap": 1036,
+  "home_cache": null,
+  "first_render": 83,
+  "home_data": 1218,
+  "splash_hidden": 1919,
+  "overlay_gone": 543,
+  "js_start": 1307,
+  "interactive": 3280
+ }
+}

@@ -1,6 +1,7 @@
 import React, { useRef } from "react";
 import { PanResponder, Pressable, StyleSheet, Text, View } from "react-native";
 import { Image } from "expo-image";
+import { proofSource } from "@/lib/proof-cache-key";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { X } from "lucide-react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -89,7 +90,7 @@ export default function PostPhotoScreen() {
             burstSize={120}
             style={styles.full}
           >
-            <Image source={{ uri }} style={StyleSheet.absoluteFill} contentFit="contain" />
+            <Image source={proofSource(uri)} style={StyleSheet.absoluteFill} contentFit="contain" cachePolicy="memory-disk" />
           </DoubleTapRespect>
         </View>
       ) : null}

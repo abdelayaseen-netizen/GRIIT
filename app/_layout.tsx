@@ -1,4 +1,5 @@
 import "@/lib/push-registration-logbox";
+import "@/lib/bundle-start";
 import { Stack, usePathname, useRouter, useSegments, router } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import * as Sentry from "@sentry/react-native";
@@ -38,16 +39,23 @@ import {
 import { ROUTES, SEGMENTS } from "@/lib/routes";
 import { useOnboardingStore } from "@/store/onboardingStore";
 import { cacheOnboardingCompleted, readOnboardingCompletedCache } from "@/lib/onboarding-completed-cache";
+import { readOnboardedUser, writeOnboardedUser } from "@/lib/onboarded-user-cache";
 import {
   dbCompletedForLaunch,
   clearKnownOnboardingCompleted,
   peekKnownOnboardingCompleted,
   peekOnboardingV2Exit,
+  resolveOnboardingCompleted,
   sessionKindFromUser,
   setKnownOnboardingCompleted,
   shouldSelfHealOnboardingFlag,
 } from "@/lib/onboarding-v2-routing";
-import { isInviteLinkSegment, resolveAuthRedirect, shouldShowAuthRedirectOverlay } from "@/lib/auth-redirect";
+import {
+  isInviteLinkSegment,
+  resolveAuthRedirect,
+  shouldShowAuthRedirectOverlay,
+  splashMayHide,
+} from "@/lib/auth-redirect";
 import { checkProfile, selfHealOnboardingCompleted } from "@/lib/check-profile";
 import { recordAppOpen } from "@/lib/app-open-tracking";
 import { initialiseSentry } from "@/lib/sentry";
@@ -64,8 +72,10 @@ import { posthog } from "@/lib/posthog";
 import { needsForceUpdate, readMinSupportedBuild } from "@/lib/remote-config";
 import ForceUpdate from "@/components/ds/ForceUpdate";
 import * as Application from "expo-application";
+import { traceMark } from "@/lib/startup-trace";
 
 const COLD_START_AT = Date.now();
+traceMark("js_start", COLD_START_AT);
 
 initialiseSentry();
 
@@ -110,6 +120,14 @@ function PushRegistrationBootstrap() {
 
 const SPLASH_MAX_MS = 1800;
 
+let splashHidden = false;
+function hideSplashOnce() {
+  if (splashHidden) return;
+  splashHidden = true;
+  traceMark("splash_hidden");
+  void SplashScreen.hideAsync();
+}
+
 function AuthRedirectorLoading() {
   return (
     <View style={layoutStyles.authLoadingOverlay}>
@@ -147,7 +165,26 @@ function AuthRedirector() {
   const coldStartTrackedRef = useRef(false);
 
   const runCheckProfile = useCallback(async (userId: string, kind: ReturnType<typeof sessionKindFromUser>) => {
+    const known = await readOnboardedUser(userId);
+    if (known) {
+      setOnboardingCompleted(true);
+      setProfileUsername(known.username);
+      setProfileCreatedAt(known.createdAt);
+      setProfileChecked(true);
+      traceMark("profile_checked");
+    }
     const outcome = await checkProfile(userId);
+    // A failed read is "unknown": keep what this device already knows instead of showing Retry.
+    if (known && outcome.onboardingCompleted === null) return;
+    if (
+      resolveOnboardingCompleted({
+        sessionKind: kind,
+        dbCompleted: outcome.onboardingCompleted,
+        username: outcome.username,
+      })
+    ) {
+      writeOnboardedUser(userId, { username: outcome.username, createdAt: outcome.profileCreatedAt });
+    }
     const cached = await readOnboardingCompletedCache();
     setOnboardingCompleted(outcome.onboardingCompleted);
     setProfileUsername(outcome.username);
@@ -167,10 +204,12 @@ function AuthRedirector() {
       void selfHealOnboardingCompleted(userId);
     }
     setProfileChecked(true);
+    traceMark("profile_checked");
   }, []);
 
   useEffect(() => {
     if (loading) return;
+    traceMark("session_restored");
     if (user) {
       void runCheckProfile(user.id, sessionKindFromUser(user));
     } else {
@@ -225,19 +264,23 @@ function AuthRedirector() {
   });
 
   const replaceHref = decision.action === "replace" ? decision.href : null;
+  const overlayShown = shouldShowAuthRedirectOverlay({ loading, hasSession: !!user, profileChecked });
+  useEffect(() => {
+    if (!overlayShown && user) traceMark("overlay_gone");
+  }, [overlayShown, user]);
+  const splashReady = splashMayHide({ overlayShown, action: decision.action });
+  useEffect(() => {
+    if (!splashReady) return;
+    const frame = requestAnimationFrame(hideSplashOnce);
+    return () => cancelAnimationFrame(frame);
+  }, [splashReady]);
   useEffect(() => {
     if (replaceHref) {
       router.replace(replaceHref as never);
     }
   }, [replaceHref, router]);
 
-  if (
-    shouldShowAuthRedirectOverlay({
-      loading,
-      hasSession: !!user,
-      profileChecked,
-    })
-  ) {
+  if (overlayShown) {
     return <AuthRedirectorLoading />;
   }
 
@@ -391,9 +434,8 @@ function RootLayout() {
 
   useEffect(() => {
     if (!fontsLoaded) return;
-    const t = setTimeout(() => {
-      SplashScreen.hideAsync();
-    }, SPLASH_MAX_MS);
+    traceMark("fonts_loaded");
+    const t = setTimeout(hideSplashOnce, SPLASH_MAX_MS);
     return () => clearTimeout(t);
   }, [fontsLoaded]);
 

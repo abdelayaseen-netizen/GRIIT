@@ -1,0 +1,8 @@
+appId: app.griit.challenge-tracker
+---
+# Build 92 chunk 11: relaunch (new process) so Home paints from the cached bootstrap first.
+- launchApp:
+    stopApp: true
+- extendedWaitUntil:
+    visible: "^Home$"
+    timeout: 30000

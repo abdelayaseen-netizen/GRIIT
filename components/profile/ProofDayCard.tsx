@@ -2,6 +2,7 @@ import React from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Lock } from "lucide-react-native";
 import { Image } from "expo-image";
+import { proofSource } from "@/lib/proof-cache-key";
 import { DS_V3 } from "@/lib/design-system";
 import type { ProofDay } from "@/lib/day-state";
 import { PROOFS_PHOTO_NOT_SAVED, proofsDateLabel } from "@/lib/proofs-grid";
@@ -39,7 +40,7 @@ export function ProofDayCard({
           <Text style={styles.missingCaption}>{PROOFS_PHOTO_NOT_SAVED}</Text>
         </View>
       ) : day.coverUri ? (
-        <Image source={{ uri: day.coverUri }} style={styles.cover} contentFit="cover" cachePolicy="memory-disk" />
+        <Image source={proofSource(day.coverUri)} style={styles.cover} contentFit="cover" cachePolicy="memory-disk" />
       ) : (
         <View style={styles.cover} />
       )}

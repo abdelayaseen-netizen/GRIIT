@@ -1253,3 +1253,114 @@ Freeze line, After Join, Account, Account errors. Handoff `src/onboarding/{goals
 ### Needs Yaseen
 - SQL: `docs/sql/build92.sql` block "Chunk 10, item 10.1" (Run 3 mi challenge + task). Until it runs, Featured has a
   gym challenge but no run (the gate "Featured includes a run" is met in code, not live).
+
+## Chunk 11 · Speed: app open and profile
+
+### 11.1 Measured first (Release, 16 Pro Max simulator, 5 runs each)
+Release build with `xcodebuild -configuration Release -sdk iphonesimulator` (`expo run:ios --device <udid>` asked for
+signing). `EXPO_PUBLIC_STARTUP_TRACE=1` turns on `lib/startup-trace.ts`, which writes each phase to AsyncStorage
+(Release strips `console.log`); `scripts/measure-startup.py` reads it from the app container. Times are ms from just
+before `simctl launch`; phases after "JS start" are ms from JS start. Cold = simulator shut down and booted (nothing
+cached), warm = app terminated and relaunched. Interactive = the last of: splash down, loading overlay gone, Home
+showing its data. The measured account is a guest in 7K Steps (Day 1). `performance.rnStartupTiming` is empty on this
+build, so the "after" builds add `lib/bundle-start.js` (run by Metro right after InitializeCore) to split native launch
+from bundle load; the "before" build has them as one number.
+
+| Median (5 runs) | Before warm | Before cold | After warm | After cold |
+|---|---|---|---|---|
+| Native launch (launch → bundle runs) | 1001 (with bundle) | 1307 (with bundle) | 603 | 807 |
+| JS bundle load (bundle → first app module) | | | 403 | 449 |
+| Fonts | 89 | 109 | 91 | 101 |
+| Auth/session restore | 121 | 142 | 123 | 134 |
+| Profile check (routing) | 353 after restore | 404 after restore | 14 (device) | 13 (device) |
+| `home.bootstrap` round trip | 836 | 1036 | after Home, in the background | same |
+| Home first render | 66 | 83 | 66 | 72 |
+| Home shows data | 992 (network) | 1218 (network) | 152 (cache) | 163 (cache) |
+| Splash down | 1907 | 1919 | 169 | 181 |
+| **Launch → Home interactive** | **2927** | **3280** | **1175** | **1459** |
+
+Runs: `11/before-warm.txt`, `before-cold.txt`, `after-warm.txt`, `after-cold.txt` (+ `.json` with every mark).
+
+Root causes, from the table:
+- `app/_layout.tsx:393-398`: the splash came down on a fixed `setTimeout(SplashScreen.hideAsync, 1800)` after fonts,
+  so every open waited about 1.9 s after JS start even when Home was ready at 1.0–1.2 s. It was the last phase in all
+  10 "before" runs. This is the delay on every open.
+- Home had no cache: it waited on `home.bootstrap` (0.8–2.1 s here, 2–5 s server-side in launch bursts on Railway).
+- The profile check (`checkProfile`, a Supabase read) gated routing on every open: 150–450 ms, and 2.9 s in one cold
+  run (the overlay spinner stayed up to 4.3 s).
+- Not the cause: `expo-updates` (`EXUpdatesLaunchWaitMs` 0, no wait), fonts (90–110 ms), session restore (120–140 ms).
+
+### 11.2 Fixes
+- Splash comes down when routing settles: `splashMayHide` (`lib/auth-redirect.ts`): no overlay and the decision is
+  stay/retry (not wait or a pending replace), on the next frame. The 1800 ms timer is now only a maximum.
+- Home from cache, then refresh: `lib/home-bootstrap-cache.ts` keeps the last complete bootstrap per user
+  (`griit.homeBootstrap.v1:{userId}`); `useHomeBootstrap(userId, { fromCache: true })`, used only by Home, gives it as
+  React Query `placeholderData`. Placeholder data leaves `isFetched` false, so the streak reconcile (now
+  `ready: isSuccess && !isPlaceholderData`) and AppContext effects wait for the live answer. A snapshot from an earlier
+  day keeps challenges and numbers but drops that day's check-ins, so a new day never opens with tasks shown done.
+  Partial answers (`failed` non-empty) are never saved. The live `home.bootstrap` still runs on every open
+  (`11/after-launch-bootstrap.txt`: 200 in 771 ms after the cached paint).
+- Returning account routes without waiting: `lib/onboarded-user-cache.ts` records per user that the fetch said
+  onboarding is done (the same `resolveOnboardingCompleted` rule routing uses). Next open routes from it at once; the
+  fetch still runs and can still redirect, and a failed fetch keeps what the device knows instead of showing Retry.
+  A new account has no record, so it is never skipped past onboarding.
+- `11/after-launch-1.3s.png` (1.3 s after launch: full Home from cache) and `after-launch-9s.png` (after refresh: same).
+
+What is left (after cold, 1459 ms): native launch 807 + bundle load 449 = 86%. That is process start, native modules
+and Hermes running the module graph up to the first route. Both are under 2 s together. Cutting them means lazy
+native modules or a smaller startup graph, not a network or timing fix.
+
+### 11.3 Profile and feed images
+- Root cause: proof photos are signed per request (`backend/lib/proof-image.ts`, new token each fetch), and expo-image
+  keyed its disk cache on the full URL, so the grid, feed and viewer downloaded the same photo again on every fetch.
+  Uploads are already 1080 px / JPEG 0.7 (`lib/proof-resize.ts`).
+- Fix: `lib/proof-cache-key.ts` `proofSource(uri)` keys the cache on the storage object (host + path, no token).
+  Used by `ProofsGrid` (plus `allowDownscaling`: decoded at tile size), `ProofImage` (feed), `PostViewer`,
+  `app/post/[id]/photo.tsx`, `DayViewer`, `DayCell`, `ProofDayCard`, `ProofViewer`, `ds/FeedPost`, with
+  `cachePolicy="memory-disk"` where it was missing.
+- Not done: thumbnails at tile size served by the server. The token must be minted by the server
+  (`createSignedUrl(path, ttl, { transform })`), which is a backend change plus deploy; chunk 11 does not allow a
+  deploy. Storage image transforms look enabled (`/storage/v1/render/image/public/...` answers "Object not found",
+  not "not enabled"). Left for Yaseen / a deploy chunk.
+- Profile open (mount → first header paint, 5 relaunches each): before 17, 16, 11, 11, 17 ms; after 17, 12, 12, 16,
+  16 ms (`11/before-profile.json`, `after-profile.json`). Under the 300 ms target both times; the live profile is
+  already in AppContext when the tab opens, so the cache path (chunk 07.6) is not needed for the header.
+
+### 11.4 Request budget
+Fresh guest per run on the SE: `.maestro/build92-11-budget.yaml` (Welcome → Faith and prayer → Start here → Join →
+first task → Done → Post to friends → Day secured → Not now → Home → Profile → Discover → Activity → relaunch). Counted
+from `railway logs --http --json` for this machine's IP in each run's window (`scripts/count-trpc-minute.py`):
+
+| Run | Total tRPC | Busiest minute | Statuses |
+|---|---|---|---|
+| 1 | 44 | 44 | 200 × 44 |
+| 2 | 44 | 44 | 200 × 44 |
+| 3 | 44 | 44 | 200 × 44 |
+| 4 | 47 | 47 | 200 × 47 |
+| 5 | 44 | 44 | 200 × 44 |
+
+Run 4's +3 is one extra app-active event (`finalizeEnded`, `listUnseenEndings`, `getReminderSettings`). 0 × 429.
+Timelines: `11/budget-run*-count.txt`; Maestro: `11/maestro-budget-run*.txt` (all exit 0). Raw logs not committed
+(they carry the client IP).
+
+### Gates
+- [x] Before and after tables for cold start, warm start and profile open, 5 runs each (above).
+- [x] Targets met: cold 1459 ms and warm 1175 ms median (< 2 s); profile header 12–17 ms (< 300 ms).
+- [x] Request budget: busiest minute 44–47 (< 50), 0 × 429 across 5 runs.
+- [x] Tests: `lib/build92-speed.test.ts` 14/14 (new; it imports `splashMayHide`, the bootstrap cache and the
+  onboarded record, none of which exist at the chunk 10 sha). Full vitest: 4 failed, the baseline 4
+  (`11/vitest-full.txt`). tsc: 5, the baseline (`11/tsc.txt`).
+- [x] Chunk 10's Home gate again on the SE with the cache: secure the day, 3 polls, relaunch (Home from cache),
+  5 polls: never "Finish the task", always "Today is secured. See you tomorrow." (`11/maestro-home-secured-cache.txt`).
+  A first try was cut short by a simulator SpringBoard crash (crash report `SpringBoard-2026-10-19-020851`).
+
+### Also fixed
+- Chunk 10 left a 6th tsc error: `lib/build92-part3.test.ts:52` passes `config.require_strava` to `taskProofKind`,
+  whose row type did not declare it (the function already read it). Type-only fix in
+  `backend/lib/discover-preview-tasks.ts`; no runtime change, no deploy needed. Chunk 10's `10/tsc.txt` was stale.
+
+### Decisions
+- Cold start follows Apple's meaning (after a reboot); warm is after the app is terminated.
+- The trace ships but is off unless built with `EXPO_PUBLIC_STARTUP_TRACE=1`; `lib/bundle-start.js` sets one global.
+- The home cache is per user on the device and is not cleared on sign-out (same as the chunk 07 profile header cache).
+- Thumbnails left for a deploy chunk rather than shipping undeployed server code.

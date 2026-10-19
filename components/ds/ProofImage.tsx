@@ -12,6 +12,7 @@
 import React, { useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { Image } from "expo-image";
+import { proofSource } from "@/lib/proof-cache-key";
 import { LinearGradient } from "expo-linear-gradient";
 import { DS_V3 } from "@/lib/design-system";
 import { isProofImageUrl } from "@/lib/profile-v2-proof-photo";
@@ -95,7 +96,7 @@ export default function ProofImage({
     request == null
       ? null
       : typeof request === "string"
-        ? { uri: request }
+        ? proofSource(request)
         : request;
 
   return (

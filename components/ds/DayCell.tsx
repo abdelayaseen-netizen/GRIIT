@@ -4,6 +4,7 @@
 import React from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Image } from "expo-image";
+import { proofSource } from "@/lib/proof-cache-key";
 import { ImageOff, Lock, Shield, Snowflake } from "lucide-react-native";
 import { DS_V3 } from "@/lib/design-system";
 import { dayCellBorderWidth, dayCellLabel, type DayCellKind } from "@/lib/day-cell";
@@ -48,7 +49,7 @@ export default function DayCell({
     >
       {showPhoto ? (
         <Image
-          source={{ uri: coverUrl! }}
+          source={proofSource(coverUrl!)}
           style={StyleSheet.absoluteFill}
           contentFit="cover"
           cachePolicy="memory-disk"

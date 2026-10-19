@@ -1,0 +1,205 @@
+{
+ "mode": "cold",
+ "runs": [
+  {
+   "run": 1,
+   "t0": 1792389738928,
+   "phases": {
+    "native_launch": 803,
+    "bundle_load": 443,
+    "fonts": 97,
+    "session_restore": 129,
+    "profile_check": 8,
+    "bootstrap": null,
+    "home_cache": 137,
+    "first_render": 70,
+    "home_data": 152,
+    "splash_hidden": 169,
+    "overlay_gone": 159,
+    "js_start": 1246,
+    "interactive": 1415
+   },
+   "trace": {
+    "marks": {
+     "js_start": 1792389740174,
+     "home_mount": 1792389740244,
+     "fonts_loaded": 1792389740271,
+     "bootstrap_start": 1792389740302,
+     "session_restored": 1792389740303,
+     "home_cache": 1792389740311,
+     "profile_checked": 1792389740311,
+     "home_data": 1792389740326,
+     "overlay_gone": 1792389740333,
+     "splash_hidden": 1792389740343,
+     "bundle_start": 1792389739731
+    },
+    "native": {},
+    "interactive": 1792389740343,
+    "writtenAt": 1792389740360
+   }
+  },
+  {
+   "run": 2,
+   "t0": 1792389771941,
+   "phases": {
+    "native_launch": 802,
+    "bundle_load": 475,
+    "fonts": 102,
+    "session_restore": 134,
+    "profile_check": 13,
+    "bootstrap": null,
+    "home_cache": 147,
+    "first_render": 76,
+    "home_data": 163,
+    "splash_hidden": 182,
+    "overlay_gone": 169,
+    "js_start": 1277,
+    "interactive": 1459
+   },
+   "trace": {
+    "marks": {
+     "js_start": 1792389773218,
+     "home_mount": 1792389773294,
+     "fonts_loaded": 1792389773320,
+     "bootstrap_start": 1792389773351,
+     "session_restored": 1792389773352,
+     "home_cache": 1792389773365,
+     "profile_checked": 1792389773365,
+     "home_data": 1792389773381,
+     "overlay_gone": 1792389773387,
+     "splash_hidden": 1792389773400,
+     "bundle_start": 1792389772743
+    },
+    "native": {},
+    "interactive": 1792389773400,
+    "writtenAt": 1792389773429
+   }
+  },
+  {
+   "run": 3,
+   "t0": 1792389806499,
+   "phases": {
+    "native_launch": 859,
+    "bundle_load": 449,
+    "fonts": 94,
+    "session_restore": 127,
+    "profile_check": 13,
+    "bootstrap": null,
+    "home_cache": 140,
+    "first_render": 70,
+    "home_data": 156,
+    "splash_hidden": 172,
+    "overlay_gone": 161,
+    "js_start": 1308,
+    "interactive": 1480
+   },
+   "trace": {
+    "marks": {
+     "js_start": 1792389807807,
+     "home_mount": 1792389807877,
+     "fonts_loaded": 1792389807901,
+     "bootstrap_start": 1792389807932,
+     "session_restored": 1792389807934,
+     "home_cache": 1792389807947,
+     "profile_checked": 1792389807947,
+     "home_data": 1792389807963,
+     "overlay_gone": 1792389807968,
+     "splash_hidden": 1792389807979,
+     "bundle_start": 1792389807358
+    },
+    "native": {},
+    "interactive": 1792389807979,
+    "writtenAt": 1792389807993
+   }
+  },
+  {
+   "run": 4,
+   "t0": 1792389840363,
+   "phases": {
+    "native_launch": 807,
+    "bundle_load": 447,
+    "fonts": 101,
+    "session_restore": 134,
+    "profile_check": 13,
+    "bootstrap": null,
+    "home_cache": 147,
+    "first_render": 72,
+    "home_data": 163,
+    "splash_hidden": 181,
+    "overlay_gone": 170,
+    "js_start": 1254,
+    "interactive": 1435
+   },
+   "trace": {
+    "marks": {
+     "js_start": 1792389841617,
+     "home_mount": 1792389841689,
+     "fonts_loaded": 1792389841718,
+     "bootstrap_start": 1792389841751,
+     "session_restored": 1792389841751,
+     "home_cache": 1792389841764,
+     "profile_checked": 1792389841764,
+     "home_data": 1792389841780,
+     "overlay_gone": 1792389841787,
+     "splash_hidden": 1792389841798,
+     "bundle_start": 1792389841170
+    },
+    "native": {},
+    "interactive": 1792389841798,
+    "writtenAt": 1792389841827
+   }
+  },
+  {
+   "run": 5,
+   "t0": 1792389875322,
+   "phases": {
+    "native_launch": 946,
+    "bundle_load": 540,
+    "fonts": 112,
+    "session_restore": 146,
+    "profile_check": 9,
+    "bootstrap": null,
+    "home_cache": 155,
+    "first_render": 83,
+    "home_data": 166,
+    "splash_hidden": 192,
+    "overlay_gone": 175,
+    "js_start": 1486,
+    "interactive": 1678
+   },
+   "trace": {
+    "marks": {
+     "js_start": 1792389876808,
+     "home_mount": 1792389876891,
+     "fonts_loaded": 1792389876920,
+     "bootstrap_start": 1792389876954,
+     "session_restored": 1792389876954,
+     "home_cache": 1792389876963,
+     "profile_checked": 1792389876963,
+     "home_data": 1792389876974,
+     "overlay_gone": 1792389876983,
+     "splash_hidden": 1792389877000,
+     "bundle_start": 1792389876268
+    },
+    "native": {},
+    "interactive": 1792389877000,
+    "writtenAt": 1792389877027
+   }
+  }
+ ],
+ "median": {
+  "native_launch": 807,
+  "bundle_load": 449,
+  "fonts": 101,
+  "session_restore": 134,
+  "profile_check": 13,
+  "bootstrap": null,
+  "home_cache": 147,
+  "first_render": 72,
+  "home_data": 163,
+  "splash_hidden": 181,
+  "overlay_gone": 169,
+  "js_start": 1277,
+  "interactive": 1459
+ }
+}
