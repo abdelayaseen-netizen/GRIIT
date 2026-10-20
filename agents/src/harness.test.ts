@@ -11,7 +11,7 @@ import { needsFreshSignup } from "./goals";
 import { freezeRight, scoreInterview, securedRight, selfReportedRight, tomorrowScore } from "./interview";
 import { doneMarker, isDoneTap } from "./loop";
 import { MIN_STEPS, interviewPrompt, systemPrompt, userPrompt } from "./prompt";
-import { classifyScreen, isWelcomeScreen } from "./screen";
+import { classifyScreen, dayClaims, isWelcomeScreen } from "./screen";
 import type { Persona, StepLog } from "./types";
 
 const persona: Persona = {
@@ -175,6 +175,21 @@ describe("reading recorded runs", () => {
     expect(isSecuredDayShape("Screen said Day 1 of 7. Enrollment day is 5 (stored current_day 5).")).toBe(false);
     expect(cleanTiming({ toVisibleMs: 153037, marker: "Day secured" }).toVisibleMs).toBeNull();
     expect(cleanTiming({ toVisibleMs: 2411, marker: "Day secured" }).toVisibleMs).toBe(2411);
+  });
+});
+
+describe("13 day claims read only a real Day n of N", () => {
+  it("Home's Today header next to its done count is not a day claim", () => {
+    expect(dayClaims(["Today", "0 of 1 done"])).toEqual([]);
+    expect(dayClaims(["Today 0 of 2 done"])).toEqual([]);
+  });
+
+  it("still reads the day lines the app shows", () => {
+    expect(dayClaims(["Drink Water Today · Day 1 of 1", "Gym before work · Day 3 of 7"])).toEqual([
+      { n: 1, total: 1 },
+      { n: 3, total: 7 },
+    ]);
+    expect(dayClaims(["Day 1"])).toEqual([]);
   });
 });
 

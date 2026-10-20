@@ -121,7 +121,8 @@ export function funnelRank(stage: string): number {
 export function dayClaims(lines: string[]): { n: number; total: number }[] {
   const blob = lines.join("\n");
   const out: { n: number; total: number }[] = [];
-  for (const match of blob.matchAll(/Day\s+(\d+)\s+of\s+(\d+)/gi)) {
+  // A capital, whole-word "Day" on one line: "Today" + "0 of 1 done" is Home's done count, not a day.
+  for (const match of blob.matchAll(/\bDay[ \u00a0]+(\d+)[ \u00a0]+of[ \u00a0]+(\d+)/g)) {
     out.push({ n: Number(match[1]), total: Number(match[2]) });
   }
   return out;
