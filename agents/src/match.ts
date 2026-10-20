@@ -76,7 +76,11 @@ export function resolveTarget(target: string, els: El[]): { point: string; end: 
   }
   const strong = matches.filter((item) => item.score >= 90);
   const pool = strong.length ? strong : matches;
-  const best = pool.sort((a, b) => boundsArea(b.el.bounds) - boundsArea(a.el.bounds) || b.score - a.score)[0];
+  // An exact control (button height) beats a bigger prefix match: on Day 2 the feed card "{task}. Self-reported…"
+  // is bigger than the "{task}" button. A small exact caption ("Email" over its field) still loses to the field.
+  const exactControls = pool.filter((item) => item.score === 100 && item.height >= 36);
+  const ranked = exactControls.length ? exactControls : pool;
+  const best = ranked.sort((a, b) => boundsArea(b.el.bounds) - boundsArea(a.el.bounds) || b.score - a.score)[0];
   if (!best) return null;
   const size = screenSize(els);
   const point = centerPoint(best.el.bounds, size);

@@ -60,3 +60,16 @@ describe("tap matching", () => {
     expect(systemAlert(["Allow", "Don't Allow"], false)).toBe("Allow");
   });
 });
+
+describe("13 Day 2 Home: the task button, not yesterday's post", () => {
+  const el = (bounds: string, a11y: string): El => ({ text: "", a11y, id: "", value: "", bounds });
+  it("an exact label wins over a bigger element that only starts with the target", () => {
+    const els = [
+      el("[0,0][440,956]", ""),
+      el("[34,335][426,385]", "Walk 7,000 steps"),
+      el("[17,517][443,577]", "Walk 7,000 steps, Next, 7K Steps · Day 2 of 7 · Self-reported"),
+      el("[17,680][443,900]", "Walk 7,000 steps. Self-reported. 7K Steps · Day 1 of 7"),
+    ];
+    expect(resolveTarget("Walk 7,000 steps", els)?.point).toBe("52%,38%");
+  });
+});
