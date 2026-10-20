@@ -1601,3 +1601,58 @@ Left out and now in `.gitignore`:
 
 Still ignored as before: `docs/reports/**/account.json` (test-persona logins), `*.log`, `ios/`, `node_modules/`,
 `backend/deploy-sha.txt`.
+
+## Chunk 13 · Ship and overnight test
+
+Branch `feat/build92` at `1b5f644b` (app), `feat/agent-testers` at `69987b17` (agents). Model: Claude Opus.
+Preconditions, confirmed by Yaseen in the chunk 13 request (Oct 19): all build 92 SQL run on production; flags
+`LIQUID_GLASS` off and `EMAIL_OTP` off (email sign-in stays as in build 91), Strava as it is now; no universal links.
+The chunk text says to start only when 01–12 are all PASSED: 07 is FAILED on its frame gate alone (1 frame of 52–59 ms
+in the PostViewer harness, needs a device check). Yaseen asked for chunk 13 with that open; recorded, not re-run.
+
+### 13.0 Before the build
+
+**SQL.** `docs/sql/build92.sql`: 03.6 already marked RUN Oct 18; 10.1 (Run 3 mi) and 12.4 (History seed) now marked
+RUN, Oct 18–19, by Yaseen on production.
+
+**History seed: why two profile numbers did not change.** Result: everything matched except
+`profiles.streak_freezes_remaining` = 1 (expected 2) and `profiles.total_days_secured` = 0 (expected 33).
+Cause: the `BEFORE UPDATE` trigger `profiles_preserve_server_columns` (`supabase/migrations/20261003040000_profiles_server_columns_secure_day.sql:17-43`).
+Unless `auth.role()` is `service_role`, it copies the old value back into `streak_freezes_remaining`,
+`last_freeze_used_at`, `total_days_secured` (and the subscription / tier columns). The SQL editor runs as `postgres`
+with no JWT, so `auth.role()` is null and the trigger silently kept 1 (the account's freeze from sign-up) and 0. The
+seed's `last_freeze_used_at` was dropped the same way (it was not in the verify query). No policy is involved: RLS
+does not apply to the `postgres` role. Not changed (report only).
+What it means on screen:
+- Profile days secured: still 33. Chunk 06 computes `secured_days` from `day_secures` (`backend/lib/user-stats.ts:12,119`),
+  not from `profiles.total_days_secured`.
+- Freezes: the app reads `profiles.streak_freezes_remaining` (`backend/trpc/routes/streaks.ts:135,145`), so the History
+  account shows 1 freeze, not 2. The History tester's "freezes" check should expect 1 for this run.
+- If Yaseen wants 2: run the same UPDATE in a transaction that first sets the JWT role the trigger checks, e.g.
+  `BEGIN; SELECT set_config('request.jwt.claim.role', 'service_role', true); UPDATE … ; COMMIT;`. Not run, not in
+  `build92.sql` (no SQL is needed for this build).
+
+**"Day 0 of 1" (Blake, 12b dry run).** Not an app screen: the harness read two lines as one. The day check
+(`GRIIT-g agents/src/screen.ts dayClaims`) ran `/Day\s+(\d+)\s+of\s+(\d+)/gi` over every screen line joined with
+newlines. Case-insensitive and without a word boundary, "Day" matched the end of Home's "Today" header, and `\s`
+matched the newline before the next element, Home's done count "0 of 1 done" (steps 4–13, when only Gym before work
+was open). After Blake joined the 1-day Drink Water Today (step 16), the 1-day enrollment (current_day 1) did not match
+"Day 0", so every replay of that text was logged as a wrong number and tagged the session "app bug". Every app
+"Day n of N" builder clamps n to at least 1 (`backend/lib/calendar-day.ts clampCalendarDay`, `feed.ts:437`,
+`feed-card-family.ts:60`, `create-chooser.ts:48`). Fix in the harness, failing test first:
+`dayClaims(["Today", "0 of 1 done"])` returned `[{n:0,total:1}]` (`13/day-claims-before.txt`); the regex is now a
+whole-word, capital "Day" with spaces only (`\bDay[ \u00a0]+(\d+)[ \u00a0]+of[ \u00a0]+(\d+)`), and the test passes
+(`13/day-claims-after.txt`). Agents suite 56/56, tsc 0. Agents commit `d179cba9`.
+
+**Flags.** `lib/feature-flags.ts`: `LIQUID_GLASS: false`, `EMAIL_OTP: false`, `STRAVA_AUTO_VERIFY: false` (unchanged).
+`app.json` ios entitlements: only `com.apple.developer.usernotifications.time-sensitive`; no `associatedDomains`.
+
+**Baselines.** vitest 2316 / 2320: the same 4 pre-existing failures (`challenge-detail-mapping` ×2,
+`featured-catalog-seed`, `join-challenge-error`). tsc: the same 5 (`featured-catalog-seed.test.ts` pglite ×4,
+`lib/share.ts` `expo-sms` types: the package is in `package.json` and `package-lock.json` and shipped in build 91; only
+this Mac's `node_modules` lacks it). `/api/health` `"commit":"8ae6ad5"`; no backend file changed since `8ae6ad56`, so no
+redeploy.
+
+**13.1 greps.** No `griit://i/` in shipped code. "Couldn't save. Tap to try again." is `OPTIMISTIC_SAVE_ERROR`, always
+with `retry: true` (`lib/home-done.ts:25`, `lib/optimistic-home.ts:44`). No exclamation mark in a copy string. No shipped
+file imports `app/dev` (excluded by `.easignore`). Route-name headers: chunk 01.5 tests are in the full run.

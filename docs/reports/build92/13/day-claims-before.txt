@@ -1,0 +1,39 @@
+[33mThe CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.[39m
+
+ RUN  v2.1.9 /Users/yaseenabdela/Developer/GRIIT-g/agents
+
+ ❯ src/harness.test.ts (20 tests | 1 failed | 18 skipped) 4ms
+   × 13 day claims read only a real Day n of N > Home's Today header next to its done count is not a day claim 3ms
+     → expected [ { n: +0, total: 1 } ] to deeply equal []
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/harness.test.ts > 13 day claims read only a real Day n of N > Home's Today header next to its done count is not a day claim
+AssertionError: expected [ { n: +0, total: 1 } ] to deeply equal []
+
+- Expected
++ Received
+
+- Array []
++ Array [
++   Object {
++     "n": 0,
++     "total": 1,
++   },
++ ]
+
+ ❯ src/harness.test.ts:183:49
+    181| describe("13 day claims read only a real Day n of N", () => {
+    182|   it("Home's Today header next to its done count is not a day claim", …
+    183|     expect(dayClaims(["Today", "0 of 1 done"])).toEqual([]);
+       |                                                 ^
+    184|     expect(dayClaims(["Today 0 of 2 done"])).toEqual([]);
+    185|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 1 passed | 18 skipped (20)
+   Start at  21:44:32
+   Duration  235ms (transform 79ms, setup 0ms, collect 107ms, tests 4ms, environment 0ms, prepare 28ms)
+
