@@ -1,0 +1,22 @@
+[33mThe CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.[39m
+
+ RUN  v2.1.9 /Users/yaseenabdela/Developer/GRIIT
+
+{"level":"info","time":"2026-10-19T22:23:20.512Z","pid":65114,"hostname":"Yaseens-MacBook-Pro.local","msg":"completed","userId":"11111111-1111-4111-8111-111111111111","taskId":"cccccccc-cccc-4ccc-8ccc-cccccccccccc","activeChallengeId":"aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa","dateKey":"2026-10-17","daySecured":false,"secureSkipped":"required_open","msg":"strava-webhook"}
+{"level":"info","time":"2026-10-19T22:23:20.514Z","pid":65114,"hostname":"Yaseens-MacBook-Pro.local","msg":"completed","userId":"11111111-1111-4111-8111-111111111111","taskId":"cccccccc-cccc-4ccc-8ccc-cccccccccccc","activeChallengeId":"aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa","dateKey":"2026-10-17","daySecured":true,"msg":"strava-webhook"}
+{"level":"info","time":"2026-10-19T22:23:20.514Z","pid":65114,"hostname":"Yaseens-MacBook-Pro.local","msg":"repeat activity","activityId":"987654321","msg":"strava-webhook"}
+{"level":"info","time":"2026-10-19T22:23:20.514Z","pid":65114,"hostname":"Yaseens-MacBook-Pro.local","msg":"completed","userId":"11111111-1111-4111-8111-111111111111","taskId":"cccccccc-cccc-4ccc-8ccc-cccccccccccc","activeChallengeId":"aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa","dateKey":"2026-10-17","daySecured":false,"secureSkipped":"required_open","msg":"strava-webhook"}
+{"level":"info","time":"2026-10-19T22:23:20.514Z","pid":65114,"hostname":"Yaseens-MacBook-Pro.local","msg":"repeat activity","activityId":"987654321","msg":"strava-webhook"}
+{"level":"info","time":"2026-10-19T22:23:20.514Z","pid":65114,"hostname":"Yaseens-MacBook-Pro.local","msg":"no matching task","userId":"11111111-1111-4111-8111-111111111111","activityId":"1","dateKey":"2026-10-17","type":"Walk","msg":"strava-webhook"}
+{"level":"info","time":"2026-10-19T22:23:20.514Z","pid":65114,"hostname":"Yaseens-MacBook-Pro.local","msg":"no matching task","userId":"11111111-1111-4111-8111-111111111111","activityId":"987654321","dateKey":"2026-10-17","type":"Run","msg":"strava-webhook"}
+{"level":"info","time":"2026-10-19T22:23:20.515Z","pid":65114,"hostname":"Yaseens-MacBook-Pro.local","msg":"no matching task","userId":"11111111-1111-4111-8111-111111111111","activityId":"555","dateKey":"2026-10-17","type":"Run","msg":"strava-webhook"}
+{"level":"info","time":"2026-10-19T22:23:20.516Z","pid":65114,"hostname":"Yaseens-MacBook-Pro.local","msg":"secure skipped: secure_day_for_user missing","userId":"11111111-1111-4111-8111-111111111111","activeChallengeId":"aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa","msg":"strava-webhook"}
+{"level":"info","time":"2026-10-19T22:23:20.516Z","pid":65114,"hostname":"Yaseens-MacBook-Pro.local","msg":"completed","userId":"11111111-1111-4111-8111-111111111111","taskId":"cccccccc-cccc-4ccc-8ccc-cccccccccccc","activeChallengeId":"aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa","dateKey":"2026-10-17","daySecured":false,"secureSkipped":"rpc_missing","msg":"strava-webhook"}
+{"level":"info","time":"2026-10-19T22:23:20.516Z","pid":65114,"hostname":"Yaseens-MacBook-Pro.local","msg":"completed","userId":"11111111-1111-4111-8111-111111111111","taskId":"cccccccc-cccc-4ccc-8ccc-cccccccccccc","activeChallengeId":"aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa","dateKey":"2026-10-16","daySecured":false,"secureSkipped":"not_today","msg":"strava-webhook"}
+ ✓ backend/lib/strava-webhook.test.ts (20 tests) 31ms
+
+ Test Files  1 passed (1)
+      Tests  20 passed (20)
+   Start at  18:23:19
+   Duration  782ms (transform 94ms, setup 0ms, collect 177ms, tests 31ms, environment 0ms, prepare 54ms)
+

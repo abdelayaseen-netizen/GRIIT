@@ -1583,3 +1583,21 @@ code (`12b/invite-test-before.txt`), passes now. Deployed with 12b.2 (8ae6ad5).
 - In the same session the harness's scroll at 50%,75% did not move Home for several steps (shots 021–025 are the same).
 - Stray output: one `run-checks.sh` call had its arguments in the wrong order and wrote empty check folders into the
   app root; removed, nothing committed.
+
+### 12b.8 Working tree clean-up (what is committed, what is left out)
+`git status` / `git diff --stat` in both repos: no tracked file was modified; every uncommitted line was an untracked
+file. Committed, in build 90's pattern: source, flows, tests, the report, results/maestro/vitest `.txt`, the dry-run
+`REPORT.md` / `screens.csv` / `result.json` / `steps.jsonl` and its shots, and the chosen evidence screenshots
+(`12/shots/`, `12b/screens/`). The 12b commits hold 240 files, none over 1 MB, nothing under `ios/`, `node_modules`,
+build output or Railway logs. Added now: `12b/curse-caption-b92/strava.txt` and `curse-caption/maestro.txt` (4 KB each).
+
+Left out and now in `.gitignore`:
+
+| Where | What | Size |
+|---|---|---|
+| App repo, `docs/reports/**/YYYY-MM-DD_HHMMSS/` | Maestro `--test-output-dir` debug folders from the chunk 12 checks, keyboard probe and reruns and the 12b flows: per-step screen-hierarchy JSON, per-step screenshots, `commands.json`, `manifest.json` (the `*.log` files were already ignored) | 881 files, 457 JSON (481,026 lines) + 424 PNG, 107 MB; 10 PNGs over 1 MB |
+| Agents repo, `agents/runs/` | Raw harness runs from Oct 10–12 (builds 83–87): step screenshots plus their html/json | 4,600 files, 488 MB (3,462 PNG) |
+| Agents repo, `agents/.tmp/` | 16 one-off diagnostic scripts (sign-in, field and tap probes, the 12b two-simulator check, whose output is in `12b/two-sim-check.txt`) | 16 files, under 1 KB each |
+
+Still ignored as before: `docs/reports/**/account.json` (test-persona logins), `*.log`, `ios/`, `node_modules/`,
+`backend/deploy-sha.txt`.
