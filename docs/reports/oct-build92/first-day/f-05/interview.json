@@ -1,0 +1,10 @@
+{
+  "secured": "The app says it means every task for today is done, so the day counts toward my streak.",
+  "freeze": "The app never mentioned or explained a freeze anywhere I looked, so I don't know.",
+  "selfReported": "The app never explained it; my guess is that I just marked the walk as done myself without any real proof like a step count.",
+  "tomorrow": "5 — I'd check in to keep the streak, but I came to join my friend's challenge and I still can't tell whether this 7-day walk is theirs or how to find them.",
+  "securedRight": true,
+  "freezeRight": false,
+  "selfReportedRight": false,
+  "asked": true
+}

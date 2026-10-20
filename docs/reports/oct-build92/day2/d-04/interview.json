@@ -1,0 +1,10 @@
+{
+  "secured": "\"Day secured\" means every task due today is done, so the day counts toward my streak. The home screen says this directly: \"Secured: every task today is done, so the day counts toward your streak.\"",
+  "freeze": "The screen I'm looking at never explained a freeze. I may have passed a mention of it on the \"What these words mean\" screen, but I can't say what it does from what I've seen here, so I'd only be guessing.",
+  "selfReported": "The screen I'm looking at only shows the label \"Self-reported\" under my task, and I take it to mean I said I did it with no one checking. The app doesn't spell that out here, so that's my inference.",
+  "tomorrow": "7 - I'm 2 days into a 7-day streak and the home screen made it easy to see I'm done for today, so I'd probably return to keep it going. Some of the terms are still unclear to me.",
+  "securedRight": true,
+  "freezeRight": false,
+  "selfReportedRight": false,
+  "asked": true
+}

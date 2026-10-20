@@ -1,0 +1,10 @@
+{
+  "secured": "The app never explained \"Day secured\" to me on the screens I saw, so I can only guess it means today's task is marked done, but I can't say for sure.",
+  "freeze": "The app never showed me what a freeze is, so I don't know; I never saw that word explained.",
+  "selfReported": "On the Read task screen, it means I just tell the app I did it and it marks today done, with no photo, camera, time window, or location check, and my challenge shows it without a photo.",
+  "tomorrow": "6 - The challenge with Dana is simple and the Done button is easy, but the walk challenge having a Read task is confusing and a few terms were never explained.",
+  "securedRight": false,
+  "freezeRight": false,
+  "selfReportedRight": true,
+  "asked": true
+}

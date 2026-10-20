@@ -1,0 +1,67 @@
+{
+  "personaId": "f-10",
+  "group": "first-day",
+  "chunk": "first-day",
+  "startedOn": "welcome",
+  "freshStartOk": true,
+  "earlyStopsRefused": 0,
+  "doneTimings": [
+    {
+      "step": 9,
+      "taskLabel": "day-secured",
+      "tappedAt": "2026-10-20T02:52:11.133Z",
+      "toSheetMs": null,
+      "toVisibleMs": null,
+      "marker": "",
+      "choice": ""
+    }
+  ],
+  "interview": {
+    "secured": "It seems to mean I finished today's task for the challenge, since after I logged my 10 pages the app showed 'Day secured' and my profile now says 1 day secured with 0 verified.",
+    "freeze": "I don't actually know, because the app never explained what a freeze is anywhere I saw.",
+    "selfReported": "I'm guessing it means I just said I did the task myself without proof, which would fit my profile showing 0 verified, but the app never spelled that out.",
+    "tomorrow": "7 - 10 pages a day feels doable and I don't want to lose my 1-day streak, though I'm still not sure what 'verified' needs from me.",
+    "securedRight": true,
+    "freezeRight": false,
+    "selfReportedRight": true,
+    "asked": true
+  },
+  "mode": "goal",
+  "startedAt": "2026-10-20T02:49:56.527Z",
+  "endedAt": "2026-10-20T02:54:10.384Z",
+  "steps": 16,
+  "durationSec": 254,
+  "goals": [
+    {
+      "id": "f-10-g1",
+      "text": "Pick the easiest-looking challenge and finish the first task.",
+      "kind": "observed",
+      "pass": false,
+      "detail": "not seen on screen"
+    }
+  ],
+  "giveUp": "Agent stopped on their own.",
+  "crashes": [],
+  "errors": [],
+  "deadEnds": [],
+  "wrongNumbers": [],
+  "funnel": "shared",
+  "stages": [
+    "opened",
+    "home",
+    "discover",
+    "challenge",
+    "joined",
+    "completed",
+    "shared"
+  ],
+  "device": "GRIIT iPhone 16. Persona phone size was recorded and not applied, because this is the simulator that has the app installed.",
+  "textSizeApplied": "large",
+  "userId": "85b458b9-3763-410f-a8df-1245c04db533",
+  "isTest": true,
+  "cleanup": "kept",
+  "stuckNotes": [],
+  "coldStartMs": 9216,
+  "model": "claude-opus-5-5",
+  "endTag": "finished"
+}

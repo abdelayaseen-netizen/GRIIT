@@ -1,0 +1,20 @@
+{
+  "gender": "man",
+  "tech": "med",
+  "patience": 3,
+  "phone": "small",
+  "textSize": "default",
+  "motivation": "committed",
+  "english": "native",
+  "fresh": true,
+  "id": "f-09",
+  "name": "Marcus",
+  "age": 28,
+  "background": "Gym regular. Wants the strict version and takes photos.",
+  "why": "Wants the hard version.",
+  "goals": [
+    "Pick a fitness challenge, choose Strict if the app offers it, and finish today's task with a photo."
+  ],
+  "chunk": "first-day",
+  "group": "first-day"
+}

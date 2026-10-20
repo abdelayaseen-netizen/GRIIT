@@ -1,0 +1,12 @@
+{
+  "today": "2026-10-19",
+  "sessions": 23,
+  "spendUsd": 5.175000000000006,
+  "calls": 734,
+  "projectedUsd": 7.011607635606481,
+  "checks": [],
+  "notes": [
+    "History account: 12/history. Seeded.",
+    "Day 2: no --from run dir, so no returning users."
+  ]
+}

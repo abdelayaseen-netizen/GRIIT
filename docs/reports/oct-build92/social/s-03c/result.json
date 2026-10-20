@@ -1,0 +1,73 @@
+{
+  "personaId": "s-03c",
+  "group": "social",
+  "chunk": "social",
+  "startedOn": "home",
+  "freshStartOk": null,
+  "earlyStopsRefused": 3,
+  "doneTimings": [],
+  "interview": {
+    "secured": "The app never explained \"Day secured\" on the screen I'm looking at (Show Up 7 details), so I can't say for sure; I'd only guess it means you finished that day's task, like the gym photo.",
+    "freeze": "The only thing I saw is the line \"Standard. A freeze can cover a missed day,\" so a freeze seems to let you miss one day without losing your progress, but the app didn't say how you get one or how many you have.",
+    "selfReported": "The app never explained \"Self-reported\" on this screen; the task here says \"Camera\" and the description says \"Photo proof,\" so I assume self-reported would mean you just say you did it without proof, but that's a guess.",
+    "tomorrow": "5 - I came back to see if Jun joined, and the challenge has 0 people and starts tomorrow, so there's a mild pull, but the app left terms like freeze unclear and there's not much social activity yet.",
+    "securedRight": false,
+    "freezeRight": false,
+    "selfReportedRight": false,
+    "asked": true
+  },
+  "mode": "goal",
+  "startedAt": "2026-10-20T04:42:24.293Z",
+  "endedAt": "2026-10-20T04:56:21.396Z",
+  "steps": 60,
+  "durationSec": 837,
+  "goals": [
+    {
+      "id": "s-03c-g1",
+      "text": "Find Jun's post in the feed or on your challenge. Like it and leave a one-line comment. Then open Jun's profile.",
+      "kind": "observed",
+      "pass": true,
+      "detail": "seen on screen"
+    }
+  ],
+  "giveUp": "Hit the 60-step cap.",
+  "crashes": [],
+  "errors": [
+    "home: Failed to run flow: Device became unreachable during isScreenStatic",
+    "discover: Failed to run flow: Device became unreachable during viewHierarchy",
+    "profile: empty model reply"
+  ],
+  "deadEnds": [
+    "home: the same screen came up 3 times",
+    "home: the same screen came up 3 times",
+    "discover: the same screen came up 3 times",
+    "profile: the same screen came up 3 times",
+    "home: the same screen came up 3 times",
+    "home: the same screen came up 3 times",
+    "home: the same screen came up 3 times",
+    "home: the same screen came up 3 times",
+    "challenge: the same screen came up 3 times",
+    "home: the same screen came up 3 times"
+  ],
+  "wrongNumbers": [],
+  "funnel": "social",
+  "stages": [
+    "opened",
+    "home",
+    "discover",
+    "challenge",
+    "joined",
+    "completed",
+    "shared",
+    "social"
+  ],
+  "device": "GRIIT iPhone 16. Persona phone size was recorded and not applied, because this is the simulator that has the app installed.",
+  "textSizeApplied": "large",
+  "userId": "56b47e53-51e1-42d8-b474-3c99e1e46222",
+  "isTest": true,
+  "cleanup": "kept",
+  "stuckNotes": [],
+  "coldStartMs": 2455,
+  "model": "claude-sonnet-5-5",
+  "endTag": "harness stop"
+}

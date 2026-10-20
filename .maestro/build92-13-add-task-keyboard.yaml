@@ -1,0 +1,31 @@
+appId: app.griit.challenge-tracker
+name: build92-13 Add a task keeps the sheet and the name when the keyboard closes
+---
+- launchApp:
+    stopApp: true
+- extendedWaitUntil:
+    visible: "Today"
+    timeout: 20000
+- tapOn: "Create"
+- tapOn:
+    text: "Create a challenge.*"
+- tapOn: "Challenge title"
+- inputText: "Keyboard check"
+- hideKeyboard:
+    optional: true
+- tapOn: "Fitness"
+- tapOn: "Group"
+- scrollUntilVisible:
+    element: "Continue"
+    direction: DOWN
+- tapOn: "Continue"
+- tapOn: "Custom"
+- tapOn: "Add a task"
+- tapOn: "e.g. Read 10 pages"
+- inputText: "Walk 10 minutes"
+- takeScreenshot: add-task-1-typed
+- hideKeyboard:
+    optional: true
+- takeScreenshot: add-task-2-after-hide-keyboard
+- assertVisible: "Walk 10 minutes"
+- assertVisible: "Add task"

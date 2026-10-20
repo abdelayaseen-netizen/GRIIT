@@ -1,0 +1,21 @@
+{
+  "gender": "man",
+  "tech": "low",
+  "patience": 3,
+  "phone": "small",
+  "textSize": "large",
+  "motivation": "curious",
+  "english": "native",
+  "fresh": false,
+  "id": "h-02",
+  "name": "Marcus",
+  "age": 45,
+  "background": "Missed a day last week and used a freeze. Left one challenge.",
+  "why": "Wants to know his streak survived.",
+  "goals": [
+    "You have used GRIIT for about a month. Open your profile and scroll through every one of your posts to the end. Then go to Home and compare the numbers: does the streak and the day number on Home match what your profile says? Say in your thought every number that does not match."
+  ],
+  "chunk": "history",
+  "group": "history",
+  "savedAccount": "/Users/yaseenabdela/Developer/GRIIT/docs/reports/build92/12/history/account.json"
+}

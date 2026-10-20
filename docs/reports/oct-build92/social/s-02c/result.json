@@ -1,0 +1,76 @@
+{
+  "personaId": "s-02c",
+  "group": "social",
+  "chunk": "social",
+  "startedOn": "home",
+  "freshStartOk": null,
+  "earlyStopsRefused": 4,
+  "doneTimings": [],
+  "interview": {
+    "secured": "The app never showed me a 'Day secured' message or explained it, so I can only guess it means I finished today's task, but I can't say for sure from what I saw.",
+    "freeze": "The app never mentioned or explained a freeze on any screen I saw, so I don't know what it is.",
+    "selfReported": "It's a label on my Read task and my feed post showing that I just said I did it and nothing verified it, though the app never spelled that out.",
+    "tomorrow": "6 - I want to see if Femi joined and the 7-day streak is a mild pull, but the app left key terms unexplained and the feed didn't give me much.",
+    "securedRight": true,
+    "freezeRight": false,
+    "selfReportedRight": false,
+    "asked": true
+  },
+  "mode": "goal",
+  "startedAt": "2026-10-20T04:04:24.804Z",
+  "endedAt": "2026-10-20T04:23:09.854Z",
+  "steps": 60,
+  "durationSec": 1125,
+  "goals": [
+    {
+      "id": "s-02c-g1",
+      "text": "Find Femi's post in the feed or on your challenge. Like it and leave a one-line comment. Then open Femi's profile.",
+      "kind": "observed",
+      "pass": true,
+      "detail": "seen on screen"
+    }
+  ],
+  "giveUp": "Hit the 60-step cap.",
+  "crashes": [],
+  "errors": [
+    "discover: Failed to run flow: Device became unreachable during viewHierarchy"
+  ],
+  "deadEnds": [
+    "home: the same screen came up 3 times",
+    "home: the same screen came up 3 times",
+    "home: the same screen came up 3 times",
+    "home: the same screen came up 3 times",
+    "discover: the same screen came up 3 times",
+    "home: the same screen came up 3 times",
+    "home: the same screen came up 3 times",
+    "discover: the same screen came up 3 times",
+    "discover: the same screen came up 3 times",
+    "home: the same screen came up 3 times",
+    "home: the same screen came up 3 times",
+    "home: the same screen came up 3 times",
+    "home: the same screen came up 3 times",
+    "home: the same screen came up 3 times",
+    "discover: the same screen came up 3 times",
+    "home: the same screen came up 3 times"
+  ],
+  "wrongNumbers": [],
+  "funnel": "social",
+  "stages": [
+    "opened",
+    "home",
+    "discover",
+    "joined",
+    "completed",
+    "shared",
+    "social"
+  ],
+  "device": "GRIIT iPhone 16. Persona phone size was recorded and not applied, because this is the simulator that has the app installed.",
+  "textSizeApplied": "large",
+  "userId": "3ff63ff2-cb7a-42fd-b43c-216479d85538",
+  "isTest": true,
+  "cleanup": "kept",
+  "stuckNotes": [],
+  "coldStartMs": 2432,
+  "model": "claude-sonnet-5-5",
+  "endTag": "harness stop"
+}

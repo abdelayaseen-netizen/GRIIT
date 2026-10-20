@@ -1,0 +1,20 @@
+{
+  "gender": "unspecified",
+  "tech": "high",
+  "patience": 1,
+  "phone": "small",
+  "textSize": "default",
+  "motivation": "curious",
+  "english": "native",
+  "fresh": true,
+  "id": "f-01",
+  "name": "Jordan",
+  "age": 19,
+  "background": "College student. TikTok-native. Impatient. Skips all text.",
+  "why": "A friend said the app was quick.",
+  "goals": [
+    "Get from the first screen to a finished task and a secured day without reading paragraphs."
+  ],
+  "chunk": "first-day",
+  "group": "first-day"
+}

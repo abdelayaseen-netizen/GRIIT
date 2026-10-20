@@ -1,0 +1,67 @@
+{
+  "personaId": "f-02",
+  "group": "first-day",
+  "chunk": "first-day",
+  "startedOn": "welcome",
+  "freshStartOk": true,
+  "earlyStopsRefused": 0,
+  "doneTimings": [
+    {
+      "step": 9,
+      "taskLabel": "day-secured",
+      "tappedAt": "2026-10-20T02:07:23.437Z",
+      "toSheetMs": null,
+      "toVisibleMs": null,
+      "marker": "",
+      "choice": ""
+    }
+  ],
+  "interview": {
+    "secured": "I think it means I posted my proof for today's tasks and the day counts toward my streak, but the profile shows '1 days secured, 0 verified', so I'm not sure a secured day is checked by anyone.",
+    "freeze": "The app never explained what a freeze is, and I didn't see the word on any screen I went through.",
+    "selfReported": "I'm guessing it means I just tap that I did the task and nobody checks it, but the app didn't spell that out anywhere I saw.",
+    "tomorrow": "6 - the hydration check is easy to do on a break at 3 am, but I'm too tired to figure out what verified versus secured means.",
+    "securedRight": false,
+    "freezeRight": false,
+    "selfReportedRight": true,
+    "asked": true
+  },
+  "mode": "goal",
+  "startedAt": "2026-10-20T02:05:28.019Z",
+  "endedAt": "2026-10-20T02:09:21.536Z",
+  "steps": 16,
+  "durationSec": 234,
+  "goals": [
+    {
+      "id": "f-02-g1",
+      "text": "Finish onboarding and one task with as few decisions as possible, until the app says the day is secured.",
+      "kind": "observed",
+      "pass": false,
+      "detail": "not seen on screen"
+    }
+  ],
+  "giveUp": "Agent stopped on their own.",
+  "crashes": [],
+  "errors": [],
+  "deadEnds": [],
+  "wrongNumbers": [],
+  "funnel": "shared",
+  "stages": [
+    "opened",
+    "home",
+    "discover",
+    "challenge",
+    "joined",
+    "completed",
+    "shared"
+  ],
+  "device": "GRIIT iPhone 16. Persona phone size was recorded and not applied, because this is the simulator that has the app installed.",
+  "textSizeApplied": "large",
+  "userId": "0916cfdb-ddc0-4610-84e9-92be5bd54488",
+  "isTest": true,
+  "cleanup": "kept",
+  "stuckNotes": [],
+  "coldStartMs": 8954,
+  "model": "claude-opus-5-5",
+  "endTag": "finished"
+}

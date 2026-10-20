@@ -1,0 +1,80 @@
+{
+  "personaId": "d-06",
+  "group": "day2",
+  "chunk": "day2",
+  "startedOn": "home",
+  "freshStartOk": null,
+  "earlyStopsRefused": 0,
+  "doneTimings": [
+    {
+      "step": 6,
+      "taskLabel": "day-secured",
+      "tappedAt": "2026-10-20T05:21:50.626Z",
+      "toSheetMs": null,
+      "toVisibleMs": 2683,
+      "marker": "1 of 1 done",
+      "choice": ""
+    }
+  ],
+  "interview": {
+    "secured": "It means every task I had for today is done, so the day counts toward my streak. The home screen says this directly: 'Secured: every task today is done, so the day counts toward your streak.'",
+    "freeze": "The screen I have in front of me never explained what a freeze is. I saw a 'What these words mean' screen, but I can't say from what I was shown what a freeze does, so I won't guess.",
+    "selfReported": "It appears on my Walk 7,000 steps proof and seems to mean I reported the steps myself rather than the app verifying them. The app didn't spell out the definition on the screen I can see, so that's my reading of it.",
+    "tomorrow": "7 - I'm on a 2-day streak and the app clearly shows today is secured and to come back tomorrow, which gives me a reason to return, but a few terms were unclear.",
+    "securedRight": true,
+    "freezeRight": false,
+    "selfReportedRight": true,
+    "asked": true
+  },
+  "mode": "goal",
+  "startedAt": "2026-10-20T05:20:33.317Z",
+  "endedAt": "2026-10-20T05:27:04.359Z",
+  "steps": 46,
+  "durationSec": 391,
+  "goals": [
+    {
+      "id": "d-06-g1",
+      "text": "You joined a challenge in GRIIT on an earlier day and finished that day. Today you open the app again. Do whatever you think you need to do today, and look at your streak. Say in your thought what the app tells you about yesterday.",
+      "kind": "observed",
+      "pass": true,
+      "detail": "seen on screen"
+    }
+  ],
+  "giveUp": "Agent stopped on their own.",
+  "crashes": [],
+  "errors": [
+    "home: empty model reply",
+    "home: model reply was not valid JSON"
+  ],
+  "deadEnds": [
+    "home: the same screen came up 3 times",
+    "home: the same screen came up 3 times",
+    "home: the same screen came up 3 times"
+  ],
+  "wrongNumbers": [
+    "Screen said Day 1 of 7. Enrollment day is 3/2 (stored current_day 3, secured).",
+    "Screen said Day 1 of 7. Enrollment day is 3/2 (stored current_day 3, secured).",
+    "Screen said Day 1 of 7. Enrollment day is 3/2 (stored current_day 3, secured)."
+  ],
+  "funnel": "shared",
+  "stages": [
+    "opened",
+    "home",
+    "discover",
+    "joined",
+    "completed",
+    "shared"
+  ],
+  "device": "GRIIT iPhone 16. Persona phone size was recorded and not applied, because this is the simulator that has the app installed.",
+  "textSizeApplied": "large",
+  "userId": "5f9441ff-984d-4d8f-b07b-d3b08f39a6df",
+  "isTest": true,
+  "cleanup": "kept",
+  "stuckNotes": [
+    "home: stuck: Show did nothing twice, so I'm trying a different control. Today is secured and my streak is 2 days in a row, so the app is telling me yesterday counted because it went from 1 to 2. I'll switch the feed to Everyone to see something new.",
+    "7K Steps: stuck: Full record did nothing twice, so I'll scroll instead. The page still says Day 2 of 7 and 2 days secured. That tells me yesterday counted and my streak is 2 days."
+  ],
+  "coldStartMs": 2102,
+  "model": "claude-sonnet-5-5",
+  "endTag": "app bug"
+}

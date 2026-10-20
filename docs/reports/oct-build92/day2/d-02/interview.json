@@ -1,0 +1,10 @@
+{
+  "secured": "A day counts as secured when I've finished every task in the challenge that day, like logging my 8 glasses of water and posting proof. The Activity screen says 'A day counts when every task in this challenge is done.'",
+  "freeze": "I can't say for sure. A 'What these words mean' screen was in my session, but the Activity screen I'm looking at doesn't mention freezes, so I can only guess it's something that protects a streak if I miss a day.",
+  "selfReported": "I can't say for sure from what I saw. I'd guess it means the app just takes my word that I did the task, with nothing verifying it, but the screen I'm looking at doesn't explain it.",
+  "tomorrow": "6 - Logging the water and getting the day secured was quick and I want to keep my streak going, but the leaderboard was just empty gray placeholders and some terms weren't clear to me.",
+  "securedRight": true,
+  "freezeRight": true,
+  "selfReportedRight": true,
+  "asked": true
+}

@@ -1,0 +1,68 @@
+{
+  "personaId": "s-01a",
+  "group": "social",
+  "chunk": "social",
+  "startedOn": "home",
+  "freshStartOk": null,
+  "earlyStopsRefused": 0,
+  "doneTimings": [
+    {
+      "step": 20,
+      "taskLabel": "WALK 10 MINUTES",
+      "tappedAt": "2026-10-20T03:19:19.741Z",
+      "toSheetMs": 995,
+      "toVisibleMs": null,
+      "marker": "",
+      "choice": "Post to friends"
+    }
+  ],
+  "interview": {
+    "secured": "A day is secured when every task in all of my challenges is done, and the screen shows a 1 day streak with Monday checked off.",
+    "freeze": "The app never explained a freeze in anything I saw, so I can't say what it is.",
+    "selfReported": "It means I marked the task done myself, like Read, and the app didn't verify it, though it never spelled this out beyond the label.",
+    "tomorrow": "6 - The streak and the checked day feel satisfying, and posting proof to friends is appealing, but I'm not sure what happens if I miss a day.",
+    "securedRight": true,
+    "freezeRight": false,
+    "selfReportedRight": true,
+    "asked": true
+  },
+  "mode": "goal",
+  "startedAt": "2026-10-20T03:14:50.894Z",
+  "endedAt": "2026-10-20T03:19:46.807Z",
+  "steps": 22,
+  "durationSec": 296,
+  "goals": [
+    {
+      "id": "s-01a-g1",
+      "text": "Create a new challenge for friends from the Create tab with one simple check-off task. On the success screen copy the invite link. Then finish today's task with Done and choose Post to friends.",
+      "kind": "observed",
+      "pass": true,
+      "detail": "seen on screen"
+    }
+  ],
+  "giveUp": "Agent stopped on their own.",
+  "crashes": [],
+  "errors": [
+    "create: Typed text did not appear in the field."
+  ],
+  "deadEnds": [],
+  "wrongNumbers": [],
+  "funnel": "shared",
+  "stages": [
+    "opened",
+    "home",
+    "challenge",
+    "joined",
+    "completed",
+    "shared"
+  ],
+  "device": "GRIIT iPhone 16. Persona phone size was recorded and not applied, because this is the simulator that has the app installed.",
+  "textSizeApplied": "large",
+  "userId": "5f520a19-f448-43e3-8847-33759e7bcbe5",
+  "isTest": true,
+  "cleanup": "kept",
+  "stuckNotes": [],
+  "coldStartMs": 9485,
+  "model": "claude-sonnet-5-5",
+  "endTag": "finished"
+}

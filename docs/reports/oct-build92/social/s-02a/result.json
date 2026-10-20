@@ -1,0 +1,68 @@
+{
+  "personaId": "s-02a",
+  "group": "social",
+  "chunk": "social",
+  "startedOn": "home",
+  "freshStartOk": null,
+  "earlyStopsRefused": 0,
+  "doneTimings": [
+    {
+      "step": 20,
+      "taskLabel": "WALK 20 MINUTES DAILY",
+      "tappedAt": "2026-10-20T03:51:04.196Z",
+      "toSheetMs": 1042,
+      "toVisibleMs": null,
+      "marker": "",
+      "choice": "Post to friends"
+    }
+  ],
+  "interview": {
+    "secured": "A day is secured when every task in all of my challenges is done, so today counts toward my streak, which is now 1 day in a row.",
+    "freeze": "The app never explained what a freeze is in anything I saw, so I can't say; I'd only be guessing.",
+    "selfReported": "It's labeled on my Read task, and I take it to mean the app just trusts me to say I did it rather than checking, but the app didn't spell that out.",
+    "tomorrow": "7 - Setting up the challenge was quick and seeing the streak start at 1 makes me want to keep it going, but I'm not sure yet how friends fit in or what the strictness setting really does.",
+    "securedRight": true,
+    "freezeRight": false,
+    "selfReportedRight": true,
+    "asked": true
+  },
+  "mode": "goal",
+  "startedAt": "2026-10-20T03:46:10.644Z",
+  "endedAt": "2026-10-20T03:51:37.735Z",
+  "steps": 22,
+  "durationSec": 327,
+  "goals": [
+    {
+      "id": "s-02a-g1",
+      "text": "Create a new challenge for friends from the Create tab with one simple check-off task. On the success screen copy the invite link. Then finish today's task with Done and choose Post to friends.",
+      "kind": "observed",
+      "pass": true,
+      "detail": "seen on screen"
+    }
+  ],
+  "giveUp": "Agent stopped on their own.",
+  "crashes": [],
+  "errors": [
+    "create: Typed text did not appear in the field."
+  ],
+  "deadEnds": [],
+  "wrongNumbers": [],
+  "funnel": "shared",
+  "stages": [
+    "opened",
+    "home",
+    "challenge",
+    "joined",
+    "completed",
+    "shared"
+  ],
+  "device": "GRIIT iPhone 16. Persona phone size was recorded and not applied, because this is the simulator that has the app installed.",
+  "textSizeApplied": "large",
+  "userId": "3ff63ff2-cb7a-42fd-b43c-216479d85538",
+  "isTest": true,
+  "cleanup": "kept",
+  "stuckNotes": [],
+  "coldStartMs": 7452,
+  "model": "claude-sonnet-5-5",
+  "endTag": "finished"
+}

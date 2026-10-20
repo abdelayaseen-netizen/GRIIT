@@ -1,0 +1,23 @@
+{
+  "gender": "unspecified",
+  "tech": "med",
+  "patience": 3,
+  "phone": "small",
+  "textSize": "default",
+  "motivation": "curious",
+  "english": "native",
+  "fresh": false,
+  "id": "s-02b",
+  "name": "Femi",
+  "age": 24,
+  "background": "Friends with Dana. Got Dana's invite link.",
+  "why": "Dana asked them to join.",
+  "goals": [
+    "The invite opened Dana's challenge: accept it and join. Then find Dana's proof post on the challenge or in the feed. Like it, double-tap the photo, and leave a one-line comment. Then tap Dana's name to open the profile."
+  ],
+  "chunk": "social",
+  "group": "social",
+  "links": [
+    "griit://i/0bffd277-ce7e-4874-a3fa-7c71e032934c"
+  ]
+}

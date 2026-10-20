@@ -1,0 +1,27 @@
+WARNING: Final field parent in class maestro.cli.command.TestCommand has been mutated reflectively by class picocli.CommandLine$Model$FieldBinding in unnamed module @7f1302d6 (file:/Users/yaseenabdela/.maestro/lib/picocli-4.6.3.jar)
+WARNING: Use --enable-final-field-mutation=ALL-UNNAMED to avoid a warning
+WARNING: Mutating final fields will be blocked in a future release unless final field mutation is enabled
+Running on GRIIT 16 Pro Max b92 - iOS 26.4 - B6CC0160-9C9F-4D0B-840D-70D790EF7FFD
+ > Flow build92-13 Add a task stays open when the sheet itself is tapped
+Launch app "app.griit.challenge-tracker"... COMPLETED
+Assert that "Today" is visible... COMPLETED
+Tap on "Create"... COMPLETED
+Tap on "Create a challenge.*"... COMPLETED
+Tap on "Challenge title"... COMPLETED
+Input text Keyboard check... COMPLETED
+Hide Keyboard... COMPLETED
+Tap on "Fitness"... COMPLETED
+Tap on "Group"... COMPLETED
+Scrolling DOWN until "Continue" is visible with speed 40, visibility percentage 100%, timeout 20000 ms, with centering disabled... COMPLETED
+Tap on "Continue"... COMPLETED
+Tap on "Custom"... COMPLETED
+Tap on "Add a task"... COMPLETED
+Tap on "e.g. Read 10 pages"... COMPLETED
+Input text Walk 10 minutes... COMPLETED
+Hide Keyboard... COMPLETED
+Assert that "Walk 10 minutes" is visible... COMPLETED
+Tap on "What you do"... COMPLETED
+Wait for animation to end... COMPLETED
+Take screenshot add-task-3-after-heading-tap... COMPLETED
+Assert that "Walk 10 minutes" is visible... COMPLETED
+Assert that "Add task" is visible... COMPLETED

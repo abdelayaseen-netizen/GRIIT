@@ -1,0 +1,20 @@
+{
+  "gender": "unspecified",
+  "tech": "med",
+  "patience": 3,
+  "phone": "small",
+  "textSize": "default",
+  "motivation": "curious",
+  "english": "native",
+  "fresh": false,
+  "id": "s-03a",
+  "name": "Kim",
+  "age": 26,
+  "background": "Starts challenges for friends and posts proof.",
+  "why": "Wants a friend on the board.",
+  "goals": [
+    "Create a new challenge for friends from the Create tab with one simple check-off task. On the success screen copy the invite link. Then finish today's task with Done and choose Post to friends."
+  ],
+  "chunk": "social",
+  "group": "social"
+}

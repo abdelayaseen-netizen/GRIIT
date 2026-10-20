@@ -1,0 +1,62 @@
+{
+  "personaId": "h-02",
+  "group": "history",
+  "chunk": "history",
+  "startedOn": "home",
+  "freshStartOk": null,
+  "earlyStopsRefused": 1,
+  "doneTimings": [],
+  "interview": {
+    "secured": "The app never showed me the phrase \"Day secured\" on the screen I can see, so I'm guessing it means you've done your daily Show up and the streak is safe for today, but the app didn't explain it.",
+    "freeze": "I used one after missing a day last week and it kept my streak going, but the screens I saw never explained how you earn one or how many you get.",
+    "selfReported": "It's listed next to \"No Days Off · Day 35 of 75\" and I take it to mean you mark the task done yourself with no verification, though the app never spelled that out.",
+    "tomorrow": "8 - I'm on a 33-day streak and Show up is still waiting today, so I'll be back, even though some terms like freeze and secured are unclear.",
+    "securedRight": true,
+    "freezeRight": false,
+    "selfReportedRight": true,
+    "asked": true
+  },
+  "mode": "goal",
+  "startedAt": "2026-10-20T03:10:24.180Z",
+  "endedAt": "2026-10-20T03:14:50.890Z",
+  "steps": 21,
+  "durationSec": 267,
+  "goals": [
+    {
+      "id": "h-02-g1",
+      "text": "You have used GRIIT for about a month. Open your profile and scroll through every one of your posts to the end. Then go to Home and compare the numbers: does the streak and the day number on Home match what your profile says? Say in your thought every number that does not match.",
+      "kind": "observed",
+      "pass": true,
+      "detail": "seen on screen"
+    }
+  ],
+  "giveUp": "Agent stopped on their own.",
+  "crashes": [],
+  "errors": [
+    "discover: model reply was not valid JSON"
+  ],
+  "deadEnds": [
+    "discover: the same screen came up 3 times",
+    "home: the same screen came up 3 times",
+    "discover: the same screen came up 3 times"
+  ],
+  "wrongNumbers": [],
+  "funnel": "shared",
+  "stages": [
+    "opened",
+    "home",
+    "discover",
+    "joined",
+    "completed",
+    "shared"
+  ],
+  "device": "GRIIT iPhone 16. Persona phone size was recorded and not applied, because this is the simulator that has the app installed.",
+  "textSizeApplied": "extra-extra-large",
+  "userId": "98f47627-2a2f-464c-90f2-737d14c0084e",
+  "isTest": true,
+  "cleanup": "kept",
+  "stuckNotes": [],
+  "coldStartMs": 9494,
+  "model": "claude-sonnet-5-5",
+  "endTag": "finished"
+}

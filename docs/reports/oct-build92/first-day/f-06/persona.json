@@ -1,0 +1,20 @@
+{
+  "gender": "unspecified",
+  "tech": "high",
+  "patience": 1,
+  "phone": "small",
+  "textSize": "default",
+  "motivation": "curious",
+  "english": "native",
+  "fresh": true,
+  "id": "f-06",
+  "name": "Sam",
+  "age": 17,
+  "background": "Taps Continue without reading, as fast as possible.",
+  "why": "Just wants to see the app.",
+  "goals": [
+    "Tap through to the first task as fast as possible and finish it."
+  ],
+  "chunk": "first-day",
+  "group": "first-day"
+}

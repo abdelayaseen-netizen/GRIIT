@@ -1,0 +1,20 @@
+{
+  "gender": "man",
+  "tech": "med",
+  "patience": 3,
+  "phone": "small",
+  "textSize": "default",
+  "motivation": "curious",
+  "english": "second",
+  "fresh": true,
+  "id": "f-11",
+  "name": "Tom",
+  "age": 44,
+  "background": "English is his second language. Reads the short lines, skips the long ones.",
+  "why": "A colleague keeps a streak and he wants one.",
+  "goals": [
+    "Reach a first task and finish it. Notice any word you do not understand."
+  ],
+  "chunk": "first-day",
+  "group": "first-day"
+}

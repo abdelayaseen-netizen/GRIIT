@@ -1,0 +1,20 @@
+{
+  "gender": "man",
+  "tech": "low",
+  "patience": 5,
+  "phone": "large",
+  "textSize": "large",
+  "motivation": "curious",
+  "english": "native",
+  "fresh": true,
+  "id": "f-03",
+  "name": "Robert",
+  "age": 58,
+  "background": "Not techy. Large text is on. Reads everything slowly.",
+  "why": "His daughter sent him the app.",
+  "goals": [
+    "Read each screen and reach a first task, then finish it."
+  ],
+  "chunk": "first-day",
+  "group": "first-day"
+}

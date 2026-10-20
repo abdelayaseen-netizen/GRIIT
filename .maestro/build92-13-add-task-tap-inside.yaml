@@ -1,0 +1,33 @@
+appId: app.griit.challenge-tracker
+name: build92-13 Add a task stays open when the sheet itself is tapped
+---
+- launchApp:
+    stopApp: true
+- extendedWaitUntil:
+    visible: "Today"
+    timeout: 20000
+- tapOn: "Create"
+- tapOn:
+    text: "Create a challenge.*"
+- tapOn: "Challenge title"
+- inputText: "Keyboard check"
+- hideKeyboard:
+    optional: true
+- tapOn: "Fitness"
+- tapOn: "Group"
+- scrollUntilVisible:
+    element: "Continue"
+    direction: DOWN
+- tapOn: "Continue"
+- tapOn: "Custom"
+- tapOn: "Add a task"
+- tapOn: "e.g. Read 10 pages"
+- inputText: "Walk 10 minutes"
+- hideKeyboard:
+    optional: true
+- assertVisible: "Walk 10 minutes"
+- tapOn: "What you do"
+- waitForAnimationToEnd
+- takeScreenshot: add-task-3-after-heading-tap
+- assertVisible: "Walk 10 minutes"
+- assertVisible: "Add task"

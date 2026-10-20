@@ -1,0 +1,23 @@
+{
+  "gender": "unspecified",
+  "tech": "med",
+  "patience": 3,
+  "phone": "small",
+  "textSize": "default",
+  "motivation": "curious",
+  "english": "native",
+  "fresh": false,
+  "id": "s-03b",
+  "name": "Jun",
+  "age": 24,
+  "background": "Friends with Kim. Got Kim's invite link.",
+  "why": "Kim asked them to join.",
+  "goals": [
+    "The invite opened Kim's challenge: accept it and join. Then find Kim's proof post on the challenge or in the feed. Like it, double-tap the photo, and leave a one-line comment. Then tap Kim's name to open the profile."
+  ],
+  "chunk": "social",
+  "group": "social",
+  "links": [
+    "griit://i/afef4538-9f2c-44a3-a9ab-51cb07bc772d"
+  ]
+}

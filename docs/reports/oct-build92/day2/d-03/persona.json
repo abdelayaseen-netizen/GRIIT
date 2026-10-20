@@ -1,0 +1,21 @@
+{
+  "gender": "unspecified",
+  "tech": "high",
+  "patience": 3,
+  "phone": "small",
+  "textSize": "default",
+  "motivation": "curious",
+  "english": "native",
+  "fresh": false,
+  "id": "d-03",
+  "name": "Lena",
+  "age": 22,
+  "background": "Returning user (first-day/f-03), last secured 2026-10-19.",
+  "why": "Started a streak and is checking in again.",
+  "goals": [
+    "You joined a challenge in GRIIT on an earlier day and finished that day. Today you open the app again. Do whatever you think you need to do today, and look at your streak. Say in your thought what the app tells you about yesterday."
+  ],
+  "savedAccount": "/Users/yaseenabdela/Developer/GRIIT/docs/reports/oct-build92/first-day/f-03/account.json",
+  "chunk": "day2",
+  "group": "day2"
+}

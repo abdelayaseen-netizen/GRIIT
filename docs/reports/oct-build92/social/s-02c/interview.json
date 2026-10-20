@@ -1,0 +1,10 @@
+{
+  "secured": "The app never showed me a 'Day secured' message or explained it, so I can only guess it means I finished today's task, but I can't say for sure from what I saw.",
+  "freeze": "The app never mentioned or explained a freeze on any screen I saw, so I don't know what it is.",
+  "selfReported": "It's a label on my Read task and my feed post showing that I just said I did it and nothing verified it, though the app never spelled that out.",
+  "tomorrow": "6 - I want to see if Femi joined and the 7-day streak is a mild pull, but the app left key terms unexplained and the feed didn't give me much.",
+  "securedRight": true,
+  "freezeRight": false,
+  "selfReportedRight": false,
+  "asked": true
+}

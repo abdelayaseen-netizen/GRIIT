@@ -1,0 +1,10 @@
+{
+  "secured": "The app never clearly defined \"Day secured\" for me; from the Drink Water card ('1 of 1 day secured') I'm guessing it means you finished that day's task and it counts toward your streak or challenge.",
+  "freeze": "I don't know, because the screens I saw never explained what a freeze is, so I can only guess it's some way to protect a streak when you miss a day.",
+  "selfReported": "It seems to mean the app just takes my word that I did the task, with no check or proof, since 'Show up' is labeled Self-reported under No Days Off.",
+  "tomorrow": "7 - I'm 33 days into a streak and want to keep my numbers going, but a few of the terms are unclear to me.",
+  "securedRight": true,
+  "freezeRight": false,
+  "selfReportedRight": true,
+  "asked": true
+}

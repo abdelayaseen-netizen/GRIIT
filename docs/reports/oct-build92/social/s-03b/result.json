@@ -1,0 +1,71 @@
+{
+  "personaId": "s-03b",
+  "group": "social",
+  "chunk": "social",
+  "startedOn": "home",
+  "freshStartOk": null,
+  "earlyStopsRefused": 3,
+  "doneTimings": [],
+  "interview": {
+    "secured": "From the Leaderboard screen, a day counts as secured when every task in the challenge is done that day (e.g. 'Secured days since Monday. A day counts when every task in this challenge is done.'), though I never saw a 'Day secured' label exp",
+    "freeze": "The app never explained what a freeze is to me, so I can't say; I didn't see that word on any screen I visited.",
+    "selfReported": "I never saw 'Self-reported' explained on a task, so I can't say what it means; my guess would be that I just tell the app I did it, but the app didn't confirm that.",
+    "tomorrow": "5 - I'd probably check back to see my walk count against Kim's, but the app left some words unexplained and I only have one friend in it, so there isn't a strong pull yet.",
+    "securedRight": true,
+    "freezeRight": false,
+    "selfReportedRight": true,
+    "asked": true
+  },
+  "mode": "goal",
+  "startedAt": "2026-10-20T04:28:06.155Z",
+  "endedAt": "2026-10-20T04:42:24.291Z",
+  "steps": 60,
+  "durationSec": 858,
+  "goals": [
+    {
+      "id": "s-03b-g1",
+      "text": "The invite opened Kim's challenge: accept it and join. Then find Kim's proof post on the challenge or in the feed. Like it, double-tap the photo, and leave a one-line comment. Then tap Kim's name to open the profile.",
+      "kind": "observed",
+      "pass": true,
+      "detail": "seen on screen"
+    }
+  ],
+  "giveUp": "Hit the 60-step cap.",
+  "crashes": [],
+  "errors": [
+    "discover: Failed to run flow: Device became unreachable during viewHierarchy",
+    "home: empty model reply",
+    "home: Only stress-test agents may kill the app.",
+    "discover: Walk 10 minutes daily is already selected."
+  ],
+  "deadEnds": [
+    "home: the same screen came up 3 times",
+    "home: the same screen came up 3 times",
+    "home: the same screen came up 3 times",
+    "home: the same screen came up 3 times",
+    "discover: the same screen came up 3 times",
+    "home: the same screen came up 3 times",
+    "home: the same screen came up 3 times",
+    "home: the same screen came up 3 times",
+    "home: the same screen came up 3 times",
+    "home: the same screen came up 3 times"
+  ],
+  "wrongNumbers": [],
+  "funnel": "social",
+  "stages": [
+    "opened",
+    "home",
+    "discover",
+    "joined",
+    "social"
+  ],
+  "device": "GRIIT iPhone 16. Persona phone size was recorded and not applied, because this is the simulator that has the app installed.",
+  "textSizeApplied": "large",
+  "userId": "13d9d7ef-0ebf-43fd-8a5b-b457e9a2ebc3",
+  "isTest": true,
+  "cleanup": "kept",
+  "stuckNotes": [],
+  "coldStartMs": 8820,
+  "model": "claude-sonnet-5-5",
+  "endTag": "harness stop"
+}

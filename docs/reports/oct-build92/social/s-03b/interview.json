@@ -1,0 +1,10 @@
+{
+  "secured": "From the Leaderboard screen, a day counts as secured when every task in the challenge is done that day (e.g. 'Secured days since Monday. A day counts when every task in this challenge is done.'), though I never saw a 'Day secured' label exp",
+  "freeze": "The app never explained what a freeze is to me, so I can't say; I didn't see that word on any screen I visited.",
+  "selfReported": "I never saw 'Self-reported' explained on a task, so I can't say what it means; my guess would be that I just tell the app I did it, but the app didn't confirm that.",
+  "tomorrow": "5 - I'd probably check back to see my walk count against Kim's, but the app left some words unexplained and I only have one friend in it, so there isn't a strong pull yet.",
+  "securedRight": true,
+  "freezeRight": false,
+  "selfReportedRight": true,
+  "asked": true
+}

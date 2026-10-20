@@ -1,0 +1,68 @@
+{
+  "personaId": "s-01b",
+  "group": "social",
+  "chunk": "social",
+  "startedOn": "home",
+  "freshStartOk": null,
+  "earlyStopsRefused": 2,
+  "doneTimings": [],
+  "interview": {
+    "secured": "From the home screen, I think it means finishing both of today's tasks (the gym and the read/walk) so the day counts toward the streak, since it says 'Finish both tasks to secure it.' The app never showed me a 'Day secured' screen, so I'm p",
+    "freeze": "The app never explained what a freeze is in anything I saw, so I can't say; I'd guess it saves a streak if you miss a day, but that's a guess.",
+    "selfReported": "The app labels Read as 'Self-reported' while the gym says 'Camera,' so I take it to mean you just say you did it without photo proof, but it never spelled that out.",
+    "tomorrow": "6 - Alex invited me and the day 1 streak with a clear 'Get to the gym' button is motivating, but the confusing terms and the empty feed make me unsure it will stick.",
+    "securedRight": true,
+    "freezeRight": false,
+    "selfReportedRight": true,
+    "asked": true
+  },
+  "mode": "goal",
+  "startedAt": "2026-10-20T03:19:48.033Z",
+  "endedAt": "2026-10-20T03:34:18.505Z",
+  "steps": 60,
+  "durationSec": 870,
+  "goals": [
+    {
+      "id": "s-01b-g1",
+      "text": "The invite opened Alex's challenge: accept it and join. Then find Alex's proof post on the challenge or in the feed. Like it, double-tap the photo, and leave a one-line comment. Then tap Alex's name to open the profile.",
+      "kind": "observed",
+      "pass": true,
+      "detail": "seen on screen"
+    }
+  ],
+  "giveUp": "Hit the 60-step cap.",
+  "crashes": [],
+  "errors": [
+    "discover: Failed to run flow: Device became unreachable during viewHierarchy"
+  ],
+  "deadEnds": [
+    "home: the same screen came up 3 times",
+    "home: the same screen came up 3 times",
+    "discover: the same screen came up 3 times",
+    "home: the same screen came up 3 times",
+    "home: the same screen came up 3 times",
+    "home: the same screen came up 3 times",
+    "home: the same screen came up 3 times",
+    "home: the same screen came up 3 times",
+    "home: the same screen came up 3 times"
+  ],
+  "wrongNumbers": [],
+  "funnel": "social",
+  "stages": [
+    "opened",
+    "home",
+    "discover",
+    "challenge",
+    "joined",
+    "social"
+  ],
+  "device": "GRIIT iPhone 16. Persona phone size was recorded and not applied, because this is the simulator that has the app installed.",
+  "textSizeApplied": "large",
+  "userId": "16ccdca8-cf66-4214-94e4-88760693b716",
+  "isTest": true,
+  "cleanup": "kept",
+  "stuckNotes": [],
+  "coldStartMs": 8728,
+  "model": "claude-sonnet-5-5",
+  "endTag": "harness stop"
+}

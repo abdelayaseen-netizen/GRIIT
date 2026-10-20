@@ -1,0 +1,71 @@
+{
+  "personaId": "f-11",
+  "group": "first-day",
+  "chunk": "first-day",
+  "startedOn": "welcome",
+  "freshStartOk": true,
+  "earlyStopsRefused": 1,
+  "doneTimings": [
+    {
+      "step": 12,
+      "taskLabel": "day-secured",
+      "tappedAt": "2026-10-20T02:58:41.579Z",
+      "toSheetMs": null,
+      "toVisibleMs": null,
+      "marker": "",
+      "choice": ""
+    }
+  ],
+  "interview": {
+    "secured": "It means I finished all my tasks today, so the day counts for my streak.",
+    "freeze": "I don't know, the app never showed or explained the word freeze.",
+    "selfReported": "The app did not explain it; I think it means I just said I walked the steps and nobody checked.",
+    "tomorrow": "6 - I want to keep my 1-day streak and it says see you tomorrow, but I saw a 'Couldn't reach GRIIT' error.",
+    "securedRight": true,
+    "freezeRight": false,
+    "selfReportedRight": false,
+    "asked": true
+  },
+  "mode": "goal",
+  "startedAt": "2026-10-20T02:54:10.385Z",
+  "endedAt": "2026-10-20T03:01:17.362Z",
+  "steps": 19,
+  "durationSec": 427,
+  "goals": [
+    {
+      "id": "f-11-g1",
+      "text": "Reach a first task and finish it. Notice any word you do not understand.",
+      "kind": "observed",
+      "pass": false,
+      "detail": "not seen on screen"
+    }
+  ],
+  "giveUp": "Agent stopped on their own.",
+  "crashes": [],
+  "errors": [
+    "onboarding: Failed to run flow: Device became unreachable during viewHierarchy",
+    "home: Failed to run flow: Device became unreachable during deviceInfo"
+  ],
+  "deadEnds": [
+    "onboarding: the same screen came up 3 times"
+  ],
+  "wrongNumbers": [],
+  "funnel": "shared",
+  "stages": [
+    "opened",
+    "home",
+    "challenge",
+    "joined",
+    "completed",
+    "shared"
+  ],
+  "device": "GRIIT iPhone 16. Persona phone size was recorded and not applied, because this is the simulator that has the app installed.",
+  "textSizeApplied": "large",
+  "userId": "bafcfdbc-0502-4c6f-8c20-228ff53f84e2",
+  "isTest": true,
+  "cleanup": "kept",
+  "stuckNotes": [],
+  "coldStartMs": 10223,
+  "model": "claude-opus-5-5",
+  "endTag": "finished"
+}

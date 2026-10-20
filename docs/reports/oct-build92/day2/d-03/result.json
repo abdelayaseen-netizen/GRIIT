@@ -1,0 +1,92 @@
+{
+  "personaId": "d-03",
+  "group": "day2",
+  "chunk": "day2",
+  "startedOn": "home",
+  "freshStartOk": null,
+  "earlyStopsRefused": 2,
+  "doneTimings": [
+    {
+      "step": 23,
+      "taskLabel": "day-secured",
+      "tappedAt": "2026-10-20T05:13:57.338Z",
+      "toSheetMs": null,
+      "toVisibleMs": 3586,
+      "marker": "1 of 1 done",
+      "choice": ""
+    }
+  ],
+  "interview": {
+    "secured": "A day is secured when you finish every task in the challenge that day, like walking 7,000 steps and posting your proof; the leaderboard counts these secured days since Monday.",
+    "freeze": "The app never clearly explained a freeze to me in what I saw, so I'm not sure; I'd only be guessing that it protects a streak if I miss a day.",
+    "selfReported": "I think it means the app takes my word that I did the task and doesn't verify it automatically, but that's from the 'What these words mean' screen's general idea and I can't recall a precise definition.",
+    "tomorrow": "6 - I like the simple 7K steps challenge and the leaderboard gives me a bit of competition, but the unexplained terms and anonymous-looking names make it feel less personal.",
+    "securedRight": true,
+    "freezeRight": false,
+    "selfReportedRight": true,
+    "asked": true
+  },
+  "mode": "goal",
+  "startedAt": "2026-10-20T05:10:45.425Z",
+  "endedAt": "2026-10-20T05:15:10.759Z",
+  "steps": 31,
+  "durationSec": 265,
+  "goals": [
+    {
+      "id": "d-03-g1",
+      "text": "You joined a challenge in GRIIT on an earlier day and finished that day. Today you open the app again. Do whatever you think you need to do today, and look at your streak. Say in your thought what the app tells you about yesterday.",
+      "kind": "observed",
+      "pass": true,
+      "detail": "seen on screen"
+    }
+  ],
+  "giveUp": "Agent stopped on their own.",
+  "crashes": [],
+  "errors": [
+    "other: Only stress-test agents may kill the app."
+  ],
+  "deadEnds": [
+    "other: the same screen came up 3 times",
+    "other: the same screen came up 3 times",
+    "home: the same screen came up 3 times"
+  ],
+  "wrongNumbers": [
+    "Screen said Day 1 of 7. Enrollment day is 3/2 (stored current_day 3, secured).",
+    "Screen said Day 1 of 7. Enrollment day is 3/2 (stored current_day 3, secured).",
+    "Screen said Day 1 of 7. Enrollment day is 3/2 (stored current_day 3, secured).",
+    "Screen said Day 1 of 7. Enrollment day is 3/2 (stored current_day 3, secured).",
+    "Screen said Day 1 of 7. Enrollment day is 3/2 (stored current_day 3, secured).",
+    "Screen said Day 1 of 7. Enrollment day is 3/2 (stored current_day 3, secured).",
+    "Screen said Day 1 of 7. Enrollment day is 3/2 (stored current_day 3, secured).",
+    "Screen said Day 1 of 7. Enrollment day is 3/2 (stored current_day 3, secured).",
+    "Screen said Day 1 of 7. Enrollment day is 3/2 (stored current_day 3, secured).",
+    "Screen said Day 1 of 7. Enrollment day is 3/2 (stored current_day 3, secured).",
+    "Screen said Day 1 of 7. Enrollment day is 3/2 (stored current_day 3, secured).",
+    "Screen said Day 1 of 7. Enrollment day is 3/2 (stored current_day 3, secured).",
+    "Screen said Day 1 of 7. Enrollment day is 3/2 (stored current_day 3, secured).",
+    "Screen said Day 1 of 7. Enrollment day is 3/2 (stored current_day 3, secured).",
+    "Screen said Day 1 of 7. Enrollment day is 3/2 (stored current_day 3, secured).",
+    "Screen said Day 1 of 7. Enrollment day is 3/2 (stored current_day 3, secured).",
+    "Screen said Day 1 of 7. Enrollment day is 3/2 (stored current_day 3, secured)."
+  ],
+  "funnel": "shared",
+  "stages": [
+    "opened",
+    "home",
+    "discover",
+    "joined",
+    "completed",
+    "shared"
+  ],
+  "device": "GRIIT iPhone 16. Persona phone size was recorded and not applied, because this is the simulator that has the app installed.",
+  "textSizeApplied": "large",
+  "userId": "720b168f-c214-4ece-9397-aa57f5ffce6e",
+  "isTest": true,
+  "cleanup": "kept",
+  "stuckNotes": [
+    "7K Steps post detail: stuck: Go back and the GRIIT header both leave me on this same 7K Steps post. I'll try the More menu, which is a different control, to see if it offers a way out. Home earlier said 1 day in a row, so yesterday counted, but today's check-in showed 0 of 1."
+  ],
+  "coldStartMs": 2059,
+  "model": "claude-sonnet-5-5",
+  "endTag": "app bug"
+}

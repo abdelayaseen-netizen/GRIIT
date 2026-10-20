@@ -1,0 +1,20 @@
+{
+  "gender": "woman",
+  "tech": "med",
+  "patience": 2,
+  "phone": "large",
+  "textSize": "default",
+  "motivation": "committed",
+  "english": "native",
+  "fresh": true,
+  "id": "f-02",
+  "name": "Amina",
+  "age": 34,
+  "background": "Nurse on night shift. Opens the app at 3 am. Tired.",
+  "why": "Wants one small thing she can finish before sleep.",
+  "goals": [
+    "Finish onboarding and one task with as few decisions as possible, until the app says the day is secured."
+  ],
+  "chunk": "first-day",
+  "group": "first-day"
+}

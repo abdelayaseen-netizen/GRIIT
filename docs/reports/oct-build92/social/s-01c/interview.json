@@ -1,0 +1,10 @@
+{
+  "secured": "Per the home screen, 'Secured' means every task for today is done, so the day counts toward your streak.",
+  "freeze": "The app never explained a freeze to me in anything I saw, so I can't say what it is.",
+  "selfReported": "The app didn't spell it out, but it appears to mean I marked the task done myself, such as Read, with no verification or proof beyond my word.",
+  "tomorrow": "6 - My streak is only at 1 day and I like the simple daily check-in, but I mainly came back to see if Blake joined and the app left some terms unexplained.",
+  "securedRight": true,
+  "freezeRight": false,
+  "selfReportedRight": true,
+  "asked": true
+}

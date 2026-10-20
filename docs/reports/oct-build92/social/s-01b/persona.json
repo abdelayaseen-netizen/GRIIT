@@ -1,0 +1,23 @@
+{
+  "gender": "unspecified",
+  "tech": "med",
+  "patience": 3,
+  "phone": "small",
+  "textSize": "default",
+  "motivation": "curious",
+  "english": "native",
+  "fresh": false,
+  "id": "s-01b",
+  "name": "Blake",
+  "age": 24,
+  "background": "Friends with Alex. Got Alex's invite link.",
+  "why": "Alex asked them to join.",
+  "goals": [
+    "The invite opened Alex's challenge: accept it and join. Then find Alex's proof post on the challenge or in the feed. Like it, double-tap the photo, and leave a one-line comment. Then tap Alex's name to open the profile."
+  ],
+  "chunk": "social",
+  "group": "social",
+  "links": [
+    "griit://i/e27e94ff-bf7d-4fcc-b2e0-d774a59ea3a2"
+  ]
+}

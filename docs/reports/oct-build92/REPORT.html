@@ -1,0 +1,120 @@
+<!doctype html><html><head><meta charset="utf-8"><title>Build 92 overnight report</title><style>
+body{font:12px/1.4 -apple-system,Helvetica,sans-serif;color:#1a1918;margin:28px}
+h1{font-size:22px} h2{font-size:16px;margin-top:22px} h3{font-size:14px;margin-top:16px} h4{font-size:12px;margin-top:12px}
+table{border-collapse:collapse;width:100%;margin:6px 0 10px;font-size:10.5px} td,th{border:1px solid #cfcac2;padding:3px 5px;text-align:left;vertical-align:top}
+th{background:#f1ede6} code{font-size:10.5px;background:#f1ede6;padding:0 3px}
+</style></head><body><h1>Overnight report, build 92, 19–20 Oct 2026</h1>
+<p>App commit <code>aae65af3</code> (About shows it). TestFlight build number 92, internal group "Team (Expo)" (EAS build <code>306056bb</code>, submission <code>8a3358e0</code> finished 22:01 EDT on 19 Oct). Server <code>/api/health</code> commit <code>8ae6ad5</code> (no backend change in build 92 after it, so no redeploy). Simulator: GRIIT 16 Pro Max b92, iOS 26.4, Release build of the same commit (a TestFlight binary cannot be installed on a simulator); one simulator booted for the whole run. Harness: <code>feat/agent-testers</code> at <code>7840dd66</code> (agents/src/build92.ts). Models: Claude Opus for the first-day group, Claude Sonnet for the rest; 60-step cap per session, $60 cost cap. Spend: 6.01 USD, 885 calls, 1773317 in, 116597 out.</p>
+<p>Part 1 (first-day, social, history) ran 21:59–00:59 EDT; part 2 (Day 2, the next calendar day for the part 1 accounts) ran 01:05–01:29 EDT.</p>
+<h2>Main number</h2>
+<p><strong>12 of 12 new users secured Day 1 (100%).</strong> Build 90: 4 of 13 (31%). The database agrees: the Day 2 qualifier reads <code>last_secured_date_key</code>, and all 12 first-day accounts had secured the day before.</p>
+<h2>Also</h2>
+<table>
+<tr><th>Number</th><th>Value</th></tr>
+<tr><td>Sessions</td><td>29 (12 first-day, 2 history, 9 social in 3 groups of three, 6 Day 2)</td></tr>
+<tr><td>First-day: started at Welcome</td><td>12 of 12</td></tr>
+<tr><td>First-day: joined</td><td>12 of 12</td></tr>
+<tr><td>First-day: task finished</td><td>12 of 12</td></tr>
+<tr><td>First-day: photo</td><td>1 of 12 (f-09; the rest picked self-reported tasks)</td></tr>
+<tr><td>First-day: posted to friends</td><td>8 of 12</td></tr>
+<tr><td>First-day: stopped on their own</td><td>12 of 12 (16–25 steps, median 19.5; none hit the cap)</td></tr>
+<tr><td>Day 2: secured again on the next day</td><td>6 of 6</td></tr>
+<tr><td>Day 2: saw the streak and the freeze line</td><td>6 of 6</td></tr>
+<tr><td>Social: invites accepted</td><td>9 of 9</td></tr>
+<tr><td>Social: likes, double-taps, comments</td><td>0, 0, 0 (see finding 3)</td></tr>
+<tr><td>Median Done → post-or-private sheet</td><td>949 ms (6 finishes; build 90: 752 ms)</td></tr>
+<tr><td>Median sheet choice → task shows as done (Day 2)</td><td>3.6 s (6 finishes)</td></tr>
+<tr><td>Cold start through Maestro, median</td><td>9.2 s first launch after install, 2.2 s on Day 2</td></tr>
+<tr><td>Would open tomorrow (median of 10)</td><td>6 (build 90: 8)</td></tr>
+<tr><td>Crashes</td><td>0</td></tr>
+</table>
+<h2>Targets (chunk 13.3, vs build 90)</h2>
+<table>
+<tr><th>Target</th><th>Build 90</th><th>Build 92</th><th>Result</th></tr>
+<tr><td>New users who secure Day 1: at least 70%</td><td>4 of 13</td><td>12 of 12 (100%)</td><td><strong>hit</strong></td></tr>
+<tr><td>Photo finishers reaching Home: 100%</td><td>about 6 of 11</td><td>1 of 1 (f-09: Day secured → Save your challenge → Home; no session saw the Proof screen)</td><td>hit, on one photo finisher only</td></tr>
+<tr><td>Words understood: at least 60%</td><td>29%</td><td>51% (44 of 87 answers: Secured 26, Self-reported 17, Freeze 1, of 29 each)</td><td><strong>missed</strong></td></tr>
+<tr><td>Social pairs with like, comment and profile: 3 of 4</td><td>0 of 3</td><td>0 of 3 (likes 0, comments 0; profiles opened in 2 groups)</td><td><strong>missed</strong> (finding 3)</td></tr>
+<tr><td>Cold start under 2 s</td><td>—</td><td>9.2 s first launch after install, 2.2 s on Day 2, both through Maestro's launch</td><td><strong>missed as measured here</strong>; this number includes Maestro's launch overhead, so the chunk 11 trace is the fairer measure</td></tr>
+</table>
+<p>Groups this run did not have, as scoped for this run: the finish-loop group (8, all task types), safety and edge (6), and the full sizes (25 first-day, 4 social pairs, 4 history). The harness's build 92 groups are 12 first-day, 3 social groups, 2 history and 6 Day 2.</p>
+<h2>Read with this in mind</h2>
+<ul>
+<li>The agents are models on a simulator, not people. Build 92's first-day group is Claude Opus and the rest Claude Sonnet; build 90 used Haiku 4.5. Part of the jump is the stronger model. The per-screen numbers (wasted taps, loops) are the fairer comparison; the Day 1 number is still the headline the build was asked to move.</li>
+<li>Groups are smaller than build 90's six chunks: 12 first-day personas (build 90 had 13 fresh), 3 social groups of three, 2 history, 6 Day 2. Build 90 had no Day 2 or history sessions; it had speed, task-type, safety and words chunks that build 92 does not run.</li>
+<li>Wasted taps include harness failures. Build 92's 72 wasted taps split into 64 harness (Maestro "Device became unreachable", empty or invalid model replies) and 8 app-side. Build 90's 163 split into 96 harness, 1 refused, 66 app-side (52 of those were re-taps of an already-selected radio on Start here). App-side only: <strong>0.21 per screen visit in build 90, 0.02 in build 92.</strong></li>
+<li>Loops rose (2.20 → 3.10) because build 92 has the long social sessions: Social 5.4 per session, History 2.5, Day 2 2.3, first-day 1.8 (build 90 first-timers 2.4). The social b and c sessions hit the 60-step cap looking for a friend's post that the app does not show them (finding 3).</li>
+<li>"app bug" tags in <code>runner-part2-day2.md</code> (d-01…d-06), on h-01 and on s-02b are harness artifacts. The day check compares the screen with the stored <code>current_day</code>, but the app shows the calendar day (chunk 06), and yesterday's post card says "Day 1 of 7". Every flagged screen was right.</li>
+<li>The "Day 0 of 1" text from Blake's 12b dry run was the harness, not the app: its day regex read "Today" + "0 of 1 done" (Home's done count) as "Day 0 of 1". Fixed in the harness (<code>d179cba9</code>, with a test); the app cannot show "Day 0" (<code>docs/reports/build92.md</code> 13.0).</li>
+<li>Words: "Rest" is not a word the app uses and the exit interview does not ask it, so it reads "not asked" in both builds.</li>
+<li>The <code>device</code> string in result.json says "GRIIT iPhone 16"; that is a stale label in the harness. The run used the Pro Max above.</li>
+</ul>
+<h2>Build 90 vs build 92</h2>
+<table>
+<tr><th></th><th>Build 90 (Oct 17)</th><th>Build 92 (Oct 19–20)</th></tr>
+<tr><td>Day 1 secured, new users</td><td>4 of 13 (31%)</td><td><strong>12 of 12 (100%)</strong></td></tr>
+<tr><td>Loops per session (3+ steps in a row on one screen)</td><td>2.20 (40 sessions)</td><td>3.10 (29 sessions)</td></tr>
+<tr><td>Wasted taps per screen visit</td><td>0.51 (163 of 321 visits)</td><td>0.15 (72 of 488 visits)</td></tr>
+<tr><td>… app-side only</td><td>0.21 (67 of 321)</td><td>0.02 (8 of 488)</td></tr>
+<tr><td>Words understood: Secured</td><td>18 of 40 (45%)</td><td>26 of 29 (90%)</td></tr>
+<tr><td>Words understood: Self-reported</td><td>13 of 40 (33%)</td><td>17 of 29 (59%)</td></tr>
+<tr><td>Words understood: Freeze</td><td>4 of 40 (10%)</td><td>1 of 29 (3%)</td></tr>
+<tr><td>Words understood: Rest</td><td>not asked</td><td>not asked (no "Rest" word in the app)</td></tr>
+<tr><td>Sessions with a crash</td><td>0 of 40</td><td>0 of 29</td></tr>
+<tr><td>Cost</td><td>$2.31 (1005 calls)</td><td>$6.01 (885 calls)</td></tr>
+</table>
+<p>Loops by group, build 92: first-day 1.8, Day 2 2.3, History 2.5, Social 5.4.</p>
+<p>Most wasted taps, build 90: start here 59 (13 visits); journal today 12 (5); all challenges 10 (1); read 10 pages 10 (1); auth 10 (3).</p>
+<p>Most wasted taps, build 92: discover 25 (12 visits); pick goals 17 (10); home 12 (99); challenge 3 (6); add a task 3 (6). Discover and pick goals are almost all "Device became unreachable" during a search-field type or a goal tap.</p>
+<p>Freeze, read strictly: 1 of 29. Nearly every answer was "never explained". In build 92 a freeze is explained when one is earned (day 7) and otherwise only in the grey Join-sheet line "A freeze can cover a missed day", so a person on day 1–2 has not been told. Read by hand, h-02 and s-03c (and arguably one Day 2 answer) are right, which makes it about 3 of 29. Either way it is lower than build 90, where Start here repeated the freeze line three times on one screen (that repeat was the copy fix).</p>
+<p>Files: <code>screens.csv</code> (one row per screen visit), <code>steps-all.csv</code> (one row per step) and <code>compare.md</code> are in this folder, and the same two CSVs were regenerated for <code>oct-build90/</code> by <code>agents/src/build92-compare.ts</code> so the numbers come from one script.</p>
+<h2>What the screenshots show</h2>
+<p>Paths are under <code>docs/reports/oct-build92/</code>; cited frames are in <code>evidence/</code> (full <code>shots/</code> folders stay on this Mac). App code was not changed for any of these, because build 92 had already shipped; each is listed in <code>BUGS.md</code> for Yaseen.</p>
+<ol>
+<li><strong>After Join on Start here, 3 of 12 new users got "Couldn't reach GRIIT. Retry" with a blank button</strong> (f-07 step 6, f-11 step 9, f-12 step 8; <code>evidence/01-retry-blank-pill-f-07-006.png</code>). Retry worked every time, and the next screen was the task. Two problems: (a) the button label is invisible, because <code>authRetryButton</code> and <code>authRetryButtonText</code> in <code>app/_layout.tsx</code> (lines 551–562) are both <code>DS_V3.color.textPrimary</code>, white on white, and has been since Oct 3 (<code>84822648</code>), so build 91 has it too; (b) the root profile check failed for a user this device did not know yet, which shows the full-screen retry. In build 90 it happened once in 40 sessions. Steps: fresh install → Welcome → goals → How it works → Start here → Join.</li>
+</ol>
+<ol>
+<li><strong>Opening a friend's running challenge from their profile always says "Challenge did not load"</strong> (s-01c steps 18–20 and 30, s-03c steps 38–45; <code>evidence/02-visitor-challenge-did-not-load-s-01c-020.png</code>). Steps: another person's profile → "Challenges, badges and stats" → tap a running challenge. <code>app/profile/record.tsx</code> line 143 pushes <code>ROUTES.CHALLENGE_ACTIVE(row.id)</code> for active rows, and on a visitor's record <code>row.id</code> is the other person's enrollment, which the viewer cannot load; Retry cannot fix it. In s-03c it was Kim's own challenge, seen through Jun's profile. Visitors should go to <code>ROUTES.CHALLENGE_ID(row.challengeId)</code>. From chunk 07.4.</li>
+</ol>
+<ol>
+<li><strong>An invited friend cannot see the inviter's post anywhere</strong>, which is why the 9 social sessions made 0 likes and 0 comments. The inviter's first post defaults to Friends; a Friends post shows only in the Following scope, to followers (<code>lib/post-audience.ts</code> <code>audienceShowsInScope</code>); accepting an invite does not create a follow; and the shared challenge's Recent proofs said "No shared proofs in this challenge yet" to co-members (s-01b steps 1–14, <code>evidence/05-invitee-no-post-s-01b-005.png</code>; same in s-02b and s-03b, which then hit the 60-step cap). Product decision: show Friends posts to co-members of the challenge, or follow on accept.</li>
+</ol>
+<ol>
+<li><strong>Profile has no tiles for self-reported posts.</strong> h-01 (25 shared self-reported posts) sees "No shared proofs yet" (<code>evidence/03-profile-no-self-reported-tiles-h-01-002.png</code>). The build 92 design's <code>ProofGrid.tsx</code> draws a "Self-reported" tile when a post has no photo, and the app's <code>ProfileProofs</code> can draw one, but the server drops them: <code>cameraProofTiles</code> in <code>backend/lib/proof-predicate.ts</code> ("self-reported days emit nothing") and <code>proofsAfterSign</code> (a tile with no image is removed). Already noted as seen in build 91 under chunk 01; still open against 07.3.</li>
+</ol>
+<ol>
+<li><strong>Minor: a tap in the strip under a sheet's footer button closes the sheet and loses the draft.</strong> <code>components/ds/Sheet.tsx</code> gives the panel <code>pointerEvents="box-none"</code>, so a tap on the panel outside its scroll body and buttons goes through to the full-screen Close scrim. Reproduced on the Pro Max: Add a task → type a name → tap 55%,97% → sheet gone (<code>docs/reports/build92/13/add-task/</code>). A tap on the heading or in the body keeps it open, and closing the keyboard keeps it open with the name (<code>.maestro/build92-13-add-task-keyboard.yaml</code> passes). The 3 social "a" sessions lost the sheet this way because the harness aimed at the "e.g. Read 10 pages" text in the clipped On Home preview at the bottom of the sheet instead of the Task name field (s-01a step 9, <code>evidence/04-add-task-sheet-s-01a-009.png</code> → <code>-closed-…-010.png</code>). So: harness aim, plus a small real dismiss target.</li>
+</ol>
+<ol>
+<li><strong>Leaderboard screenshots show grey placeholders while the hierarchy already has the names</strong> (d-03 step 30, d-04 step 14, s-01c step 16, s-03c step 12). Possibly screenshot timing; not verified. Low.</li>
+</ol>
+<p>Harness, not product (fixed on <code>feat/agent-testers</code>): the "Day 0 of 1" regex (<code>d179cba9</code>); on Day 2 Home a "Done" tap opened yesterday's post because the target matcher picked the largest prefix match (the feed card) over the 100-score button (<code>05dbffa0</code>, with a test); the back action is a swipe at y = 50%, which on Show Up 7 pressed the full-width task row and sent s-01b into the camera (not fixed; noted); "Device became unreachable" on Maestro types (64 wasted taps).</p>
+<h2>Day 2</h2>
+<table>
+<tr><th>Persona</th><th>Last secured after the session</th><th>Secured today</th><th>Saw streak</th><th>Saw freeze</th><th>Steps</th></tr>
+<tr><td>d-01 Tess</td><td>2026-10-20</td><td>yes</td><td>yes</td><td>yes</td><td>16</td></tr>
+<tr><td>d-02 Omar</td><td>2026-10-20</td><td>yes</td><td>yes</td><td>yes</td><td>17</td></tr>
+<tr><td>d-03 Lena</td><td>2026-10-20</td><td>yes</td><td>yes</td><td>yes</td><td>31</td></tr>
+<tr><td>d-04 Raj</td><td>2026-10-20</td><td>yes</td><td>yes</td><td>yes</td><td>16</td></tr>
+<tr><td>d-05 Ivy</td><td>2026-10-20</td><td>yes</td><td>yes</td><td>yes</td><td>17</td></tr>
+<tr><td>d-06 Sam</td><td>2026-10-20</td><td>yes</td><td>yes</td><td>yes</td><td>46</td></tr>
+</table>
+<h2>Social</h2>
+<table>
+<tr><th>Persona</th><th>Invite accepted</th><th>Likes</th><th>Double-taps</th><th>Comments</th><th>Profile screens</th><th>Steps</th></tr>
+<tr><td>s-01a Alex (creator)</td><td>yes</td><td>0</td><td>0</td><td>0</td><td>0</td><td>22</td></tr>
+<tr><td>s-01b Blake</td><td>yes</td><td>0</td><td>0</td><td>0</td><td>0</td><td>60 (cap)</td></tr>
+<tr><td>s-01c Alex (return)</td><td>yes</td><td>0</td><td>0</td><td>0</td><td>6</td><td>60 (cap)</td></tr>
+<tr><td>s-02a Dana</td><td>yes</td><td>0</td><td>0</td><td>0</td><td>0</td><td>22</td></tr>
+<tr><td>s-02b Femi</td><td>yes</td><td>0</td><td>0</td><td>0</td><td>0</td><td>60 (cap)</td></tr>
+<tr><td>s-02c Dana (return)</td><td>yes</td><td>0</td><td>0</td><td>0</td><td>0</td><td>60 (cap)</td></tr>
+<tr><td>s-03a Kim</td><td>yes</td><td>0</td><td>0</td><td>0</td><td>0</td><td>23</td></tr>
+<tr><td>s-03b Jun</td><td>yes</td><td>0</td><td>0</td><td>0</td><td>1</td><td>60 (cap)</td></tr>
+<tr><td>s-03c Kim (return)</td><td>yes</td><td>0</td><td>0</td><td>0</td><td>2</td><td>60 (cap)</td></tr>
+</table>
+<h2>History</h2>
+<p>The seeded account (Priya's private No Days Off, 75 days, a 33-day streak) checked Home against Profile. Both sessions read Streak 33, Best 33, 33 days secured, "33 of 34 days secured" in Stats, and "No Days Off · Day 35 of 75" on Home. They called Day 35 against 33 secured a mismatch; it is not: Day 35 is today's calendar day (chunk 06), and 33 of the 34 days before it were secured. The seed's <code>profiles.total_days_secured</code> stayed 0 and freezes stayed 1 (the <code>profiles_preserve_server_columns</code> trigger, <code>docs/reports/build92.md</code> 13.0); Profile still showed 33 because it reads <code>user_stats</code> from <code>day_secures</code>. Both found no posts on Profile (finding 4).</p>
+<h2>Sessions</h2>
+<p><code>runner-part1.md</code> (first-day, social, history) and <code>runner-part2-day2.md</code> (Day 2) have the per-session ends, tags and quiz lines as the runner wrote them; <code>runner-part1-summary.json</code> and <code>runner-part2-summary.json</code> are the machine-readable form. Each session folder has <code>persona.json</code>, <code>result.json</code>, <code>steps.jsonl</code>, <code>interview.json</code> and <code>spend.json</code>.</p>
+<h2>Cost</h2>
+<p>6.01 USD of the 60 USD cap: part 1 5.18 (734 calls), Day 2 0.83 (151 calls). <code>spend.txt</code>.</p></body></html>

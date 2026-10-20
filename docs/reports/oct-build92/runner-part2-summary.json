@@ -1,0 +1,61 @@
+{
+  "today": "2026-10-20",
+  "sessions": 6,
+  "spendUsd": 0.833486,
+  "calls": 151,
+  "projectedUsd": 5.735316251748252,
+  "checks": [
+    {
+      "personaId": "d-01",
+      "lastSecured": "2026-10-20",
+      "securedToday": true,
+      "sawStreak": true,
+      "sawFreeze": true,
+      "missedDays": 0
+    },
+    {
+      "personaId": "d-02",
+      "lastSecured": "2026-10-20",
+      "securedToday": true,
+      "sawStreak": true,
+      "sawFreeze": true,
+      "missedDays": 0
+    },
+    {
+      "personaId": "d-03",
+      "lastSecured": "2026-10-20",
+      "securedToday": true,
+      "sawStreak": true,
+      "sawFreeze": true,
+      "missedDays": 0
+    },
+    {
+      "personaId": "d-04",
+      "lastSecured": "2026-10-20",
+      "securedToday": true,
+      "sawStreak": true,
+      "sawFreeze": true,
+      "missedDays": 0
+    },
+    {
+      "personaId": "d-05",
+      "lastSecured": "2026-10-20",
+      "securedToday": true,
+      "sawStreak": true,
+      "sawFreeze": true,
+      "missedDays": 0
+    },
+    {
+      "personaId": "d-06",
+      "lastSecured": "2026-10-20",
+      "securedToday": true,
+      "sawStreak": true,
+      "sawFreeze": true,
+      "missedDays": 0
+    }
+  ],
+  "notes": [
+    "History account: 12/history. Seeded.",
+    "Day 2: 12 saved accounts from oct-build92 qualify; 12 secured yesterday (2026-10-20 is today). 6 used."
+  ]
+}

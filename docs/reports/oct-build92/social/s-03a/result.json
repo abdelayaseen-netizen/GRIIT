@@ -1,0 +1,69 @@
+{
+  "personaId": "s-03a",
+  "group": "social",
+  "chunk": "social",
+  "startedOn": "home",
+  "freshStartOk": null,
+  "earlyStopsRefused": 0,
+  "doneTimings": [
+    {
+      "step": 21,
+      "taskLabel": "WALK 10 MINUTES DAILY",
+      "tappedAt": "2026-10-20T04:27:37.162Z",
+      "toSheetMs": 920,
+      "toVisibleMs": null,
+      "marker": "",
+      "choice": "Post to friends"
+    }
+  ],
+  "interview": {
+    "secured": "A day is secured when every task in all my challenges is done, which is what the screen said, and it bumped my streak to 1 day in a row.",
+    "freeze": "The app never explained a freeze to me in anything I saw, so I can't say what it is; the Monday circle with a dash might be related, but nothing told me.",
+    "selfReported": "It seems to mean I just said I did the task (like Read) and the app didn't verify it, though the screen only shows the label without explaining it.",
+    "tomorrow": "7 - Setting up a challenge was quick and seeing the streak start at 1 is motivating, but I'm unsure about a few terms like freeze.",
+    "securedRight": true,
+    "freezeRight": false,
+    "selfReportedRight": false,
+    "asked": true
+  },
+  "mode": "goal",
+  "startedAt": "2026-10-20T04:23:09.855Z",
+  "endedAt": "2026-10-20T04:28:05.134Z",
+  "steps": 23,
+  "durationSec": 295,
+  "goals": [
+    {
+      "id": "s-03a-g1",
+      "text": "Create a new challenge for friends from the Create tab with one simple check-off task. On the success screen copy the invite link. Then finish today's task with Done and choose Post to friends.",
+      "kind": "observed",
+      "pass": true,
+      "detail": "seen on screen"
+    }
+  ],
+  "giveUp": "Agent stopped on their own.",
+  "crashes": [],
+  "errors": [
+    "create: empty model reply",
+    "create: Typed text did not appear in the field."
+  ],
+  "deadEnds": [],
+  "wrongNumbers": [],
+  "funnel": "shared",
+  "stages": [
+    "opened",
+    "home",
+    "challenge",
+    "joined",
+    "completed",
+    "shared"
+  ],
+  "device": "GRIIT iPhone 16. Persona phone size was recorded and not applied, because this is the simulator that has the app installed.",
+  "textSizeApplied": "large",
+  "userId": "56b47e53-51e1-42d8-b474-3c99e1e46222",
+  "isTest": true,
+  "cleanup": "kept",
+  "stuckNotes": [],
+  "coldStartMs": 8557,
+  "model": "claude-sonnet-5-5",
+  "endTag": "finished"
+}

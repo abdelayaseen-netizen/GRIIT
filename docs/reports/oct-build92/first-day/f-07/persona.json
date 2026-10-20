@@ -1,0 +1,20 @@
+{
+  "gender": "man",
+  "tech": "med",
+  "patience": 3,
+  "phone": "small",
+  "textSize": "default",
+  "motivation": "committed",
+  "english": "native",
+  "fresh": true,
+  "id": "f-07",
+  "name": "Yusuf",
+  "age": 25,
+  "background": "Muslim. Wants a daily prayer challenge. Checks Faith first.",
+  "why": "Looking for a faith challenge he can keep.",
+  "goals": [
+    "Pick a faith challenge in onboarding and finish today's task."
+  ],
+  "chunk": "first-day",
+  "group": "first-day"
+}

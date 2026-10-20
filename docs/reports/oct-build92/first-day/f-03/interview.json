@@ -1,0 +1,10 @@
+{
+  "secured": "It means I finished every task for today, so the day counts toward my streak; the screen said that in plain words.",
+  "freeze": "I don't know, because the app never explained what a freeze is in anything I read.",
+  "selfReported": "I can only guess that it means I just say I did the task myself, because the app never explained that word to me.",
+  "tomorrow": "6 - It told me 'See you tomorrow' and I'd like to keep my 1-day streak going, but I'm still not sure what some of the words mean.",
+  "securedRight": true,
+  "freezeRight": false,
+  "selfReportedRight": false,
+  "asked": true
+}

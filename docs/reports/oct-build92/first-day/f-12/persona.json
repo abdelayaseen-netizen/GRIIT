@@ -1,0 +1,20 @@
+{
+  "gender": "woman",
+  "tech": "med",
+  "patience": 4,
+  "phone": "small",
+  "textSize": "default",
+  "motivation": "curious",
+  "english": "native",
+  "fresh": true,
+  "id": "f-12",
+  "name": "Grace",
+  "age": 36,
+  "background": "Does not want the camera on. Denies permissions when asked.",
+  "why": "Privacy first.",
+  "goals": [
+    "Reach a first task that does not need a photo and finish it."
+  ],
+  "chunk": "first-day",
+  "group": "first-day"
+}

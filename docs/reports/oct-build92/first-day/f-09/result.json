@@ -1,0 +1,73 @@
+{
+  "personaId": "f-09",
+  "group": "first-day",
+  "chunk": "first-day",
+  "startedOn": "welcome",
+  "freshStartOk": true,
+  "earlyStopsRefused": 1,
+  "doneTimings": [
+    {
+      "step": 12,
+      "taskLabel": "day-secured",
+      "tappedAt": "2026-10-20T02:45:51.152Z",
+      "toSheetMs": null,
+      "toVisibleMs": null,
+      "marker": "",
+      "choice": ""
+    }
+  ],
+  "interview": {
+    "secured": "It means I completed the day's task and posted my photo proof, so the day counts toward my streak; my profile shows 1 day secured, 1 verified.",
+    "freeze": "The app never explained what a freeze is in anything I saw, so I don't know.",
+    "selfReported": "The app never defined it; my guess is it's a task you just tick off without photo proof, but nothing I saw actually said that.",
+    "tomorrow": "7 - I'm 1 of 3 toward the 3-day streak and the photo proof suits the strict version I want, but my proof thumbnail showed up as a black square, which bugs me.",
+    "securedRight": true,
+    "freezeRight": false,
+    "selfReportedRight": true,
+    "asked": true
+  },
+  "mode": "goal",
+  "startedAt": "2026-10-20T02:42:10.980Z",
+  "endedAt": "2026-10-20T02:49:56.527Z",
+  "steps": 25,
+  "durationSec": 466,
+  "goals": [
+    {
+      "id": "f-09-g1",
+      "text": "Pick a fitness challenge, choose Strict if the app offers it, and finish today's task with a photo.",
+      "kind": "observed",
+      "pass": false,
+      "detail": "not seen on screen"
+    }
+  ],
+  "giveUp": "Agent stopped on their own.",
+  "crashes": [],
+  "errors": [
+    "onboarding: Failed to run flow: Device became unreachable during viewHierarchy",
+    "auth: Typed text did not appear in the field."
+  ],
+  "deadEnds": [
+    "onboarding: the same screen came up 3 times"
+  ],
+  "wrongNumbers": [],
+  "funnel": "shared",
+  "stages": [
+    "opened",
+    "home",
+    "discover",
+    "challenge",
+    "joined",
+    "completed",
+    "photo",
+    "shared"
+  ],
+  "device": "GRIIT iPhone 16. Persona phone size was recorded and not applied, because this is the simulator that has the app installed.",
+  "textSizeApplied": "large",
+  "userId": "50e7b294-6959-4bdf-a132-6b40c2a82d92",
+  "isTest": true,
+  "cleanup": "kept",
+  "stuckNotes": [],
+  "coldStartMs": 9205,
+  "model": "claude-opus-5-5",
+  "endTag": "finished"
+}

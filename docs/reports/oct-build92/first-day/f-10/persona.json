@@ -1,0 +1,20 @@
+{
+  "gender": "woman",
+  "tech": "med",
+  "patience": 3,
+  "phone": "small",
+  "textSize": "default",
+  "motivation": "skeptical",
+  "english": "native",
+  "fresh": true,
+  "id": "f-10",
+  "name": "Elena",
+  "age": 26,
+  "background": "Beginner who worries she picked something too hard.",
+  "why": "Curious how hard it feels.",
+  "goals": [
+    "Pick the easiest-looking challenge and finish the first task."
+  ],
+  "chunk": "first-day",
+  "group": "first-day"
+}

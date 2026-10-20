@@ -1,0 +1,69 @@
+{
+  "personaId": "s-01c",
+  "group": "social",
+  "chunk": "social",
+  "startedOn": "home",
+  "freshStartOk": null,
+  "earlyStopsRefused": 3,
+  "doneTimings": [],
+  "interview": {
+    "secured": "Per the home screen, 'Secured' means every task for today is done, so the day counts toward your streak.",
+    "freeze": "The app never explained a freeze to me in anything I saw, so I can't say what it is.",
+    "selfReported": "The app didn't spell it out, but it appears to mean I marked the task done myself, such as Read, with no verification or proof beyond my word.",
+    "tomorrow": "6 - My streak is only at 1 day and I like the simple daily check-in, but I mainly came back to see if Blake joined and the app left some terms unexplained.",
+    "securedRight": true,
+    "freezeRight": false,
+    "selfReportedRight": true,
+    "asked": true
+  },
+  "mode": "goal",
+  "startedAt": "2026-10-20T03:34:18.507Z",
+  "endedAt": "2026-10-20T03:46:10.642Z",
+  "steps": 60,
+  "durationSec": 712,
+  "goals": [
+    {
+      "id": "s-01c-g1",
+      "text": "Find Blake's post in the feed or on your challenge. Like it and leave a one-line comment. Then open Blake's profile.",
+      "kind": "observed",
+      "pass": true,
+      "detail": "seen on screen"
+    }
+  ],
+  "giveUp": "Hit the 60-step cap.",
+  "crashes": [],
+  "errors": [
+    "discover: Failed to run flow: Device became unreachable during viewHierarchy"
+  ],
+  "deadEnds": [
+    "home: the same screen came up 3 times",
+    "home: the same screen came up 3 times",
+    "discover: the same screen came up 3 times",
+    "challenge: the same screen came up 3 times",
+    "other: the same screen came up 3 times",
+    "other: the same screen came up 3 times",
+    "challenge: the same screen came up 3 times",
+    "home: the same screen came up 3 times"
+  ],
+  "wrongNumbers": [],
+  "funnel": "social",
+  "stages": [
+    "opened",
+    "home",
+    "discover",
+    "challenge",
+    "joined",
+    "completed",
+    "shared",
+    "social"
+  ],
+  "device": "GRIIT iPhone 16. Persona phone size was recorded and not applied, because this is the simulator that has the app installed.",
+  "textSizeApplied": "large",
+  "userId": "5f520a19-f448-43e3-8847-33759e7bcbe5",
+  "isTest": true,
+  "cleanup": "kept",
+  "stuckNotes": [],
+  "coldStartMs": 9322,
+  "model": "claude-sonnet-5-5",
+  "endTag": "harness stop"
+}

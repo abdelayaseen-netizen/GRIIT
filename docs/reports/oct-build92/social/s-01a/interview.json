@@ -1,0 +1,10 @@
+{
+  "secured": "A day is secured when every task in all of my challenges is done, and the screen shows a 1 day streak with Monday checked off.",
+  "freeze": "The app never explained a freeze in anything I saw, so I can't say what it is.",
+  "selfReported": "It means I marked the task done myself, like Read, and the app didn't verify it, though it never spelled this out beyond the label.",
+  "tomorrow": "6 - The streak and the checked day feel satisfying, and posting proof to friends is appealing, but I'm not sure what happens if I miss a day.",
+  "securedRight": true,
+  "freezeRight": false,
+  "selfReportedRight": true,
+  "asked": true
+}

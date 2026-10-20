@@ -1,0 +1,10 @@
+{
+  "secured": "It seems to mean I finished today's task for the challenge, since after I logged my 10 pages the app showed 'Day secured' and my profile now says 1 day secured with 0 verified.",
+  "freeze": "I don't actually know, because the app never explained what a freeze is anywhere I saw.",
+  "selfReported": "I'm guessing it means I just said I did the task myself without proof, which would fit my profile showing 0 verified, but the app never spelled that out.",
+  "tomorrow": "7 - 10 pages a day feels doable and I don't want to lose my 1-day streak, though I'm still not sure what 'verified' needs from me.",
+  "securedRight": true,
+  "freezeRight": false,
+  "selfReportedRight": true,
+  "asked": true
+}

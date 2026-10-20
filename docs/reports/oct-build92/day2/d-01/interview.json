@@ -1,0 +1,10 @@
+{
+  "secured": "\"Day secured\" means every task I had for today is done, so today counts toward my streak (the home screen says exactly that, and I'm at 2 days in a row).",
+  "freeze": "I'm not sure; the screens I can see here never explain what a freeze is, so I can't say for certain, though I'd guess it protects a streak on a missed day.",
+  "selfReported": "It means I said I did the task (like walking 7,000 steps) myself and the app didn't verify it automatically, though I only partly know this since the label on the post isn't explained on the home screen.",
+  "tomorrow": "7 - The streak count and the quick single task make it easy to come back, but I'm a little unsure about some terms like freeze.",
+  "securedRight": true,
+  "freezeRight": false,
+  "selfReportedRight": true,
+  "asked": true
+}

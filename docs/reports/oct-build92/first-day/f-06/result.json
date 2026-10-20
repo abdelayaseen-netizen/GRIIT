@@ -1,0 +1,72 @@
+{
+  "personaId": "f-06",
+  "group": "first-day",
+  "chunk": "first-day",
+  "startedOn": "welcome",
+  "freshStartOk": true,
+  "earlyStopsRefused": 2,
+  "doneTimings": [
+    {
+      "step": 14,
+      "taskLabel": "day-secured",
+      "tappedAt": "2026-10-20T02:29:45.821Z",
+      "toSheetMs": null,
+      "toVisibleMs": null,
+      "marker": "",
+      "choice": ""
+    }
+  ],
+  "interview": {
+    "secured": "It means I finished every task for today, so the day counts toward my streak; the home screen literally says that.",
+    "freeze": "No idea, I never saw a freeze mentioned or explained anywhere while I was tapping through.",
+    "selfReported": "The app never explained it; it just showed under my walk post, and I guess it means I said I did it without any proof, but that's my guess.",
+    "tomorrow": "5 - the streak thing is kind of motivating, but tapping 'done' on steps nobody checks feels pointless.",
+    "securedRight": true,
+    "freezeRight": false,
+    "selfReportedRight": false,
+    "asked": true
+  },
+  "mode": "goal",
+  "startedAt": "2026-10-20T02:24:59.466Z",
+  "endedAt": "2026-10-20T02:32:11.027Z",
+  "steps": 20,
+  "durationSec": 432,
+  "goals": [
+    {
+      "id": "f-06-g1",
+      "text": "Tap through to the first task as fast as possible and finish it.",
+      "kind": "observed",
+      "pass": false,
+      "detail": "not seen on screen"
+    }
+  ],
+  "giveUp": "Agent stopped on their own.",
+  "crashes": [],
+  "errors": [
+    "onboarding: Failed to run flow: Device became unreachable during viewHierarchy",
+    "onboarding: Failed to run flow: Device became unreachable during deviceInfo"
+  ],
+  "deadEnds": [
+    "onboarding: the same screen came up 3 times",
+    "onboarding: the same screen came up 3 times"
+  ],
+  "wrongNumbers": [],
+  "funnel": "shared",
+  "stages": [
+    "opened",
+    "home",
+    "challenge",
+    "joined",
+    "completed",
+    "shared"
+  ],
+  "device": "GRIIT iPhone 16. Persona phone size was recorded and not applied, because this is the simulator that has the app installed.",
+  "textSizeApplied": "large",
+  "userId": "5f9441ff-984d-4d8f-b07b-d3b08f39a6df",
+  "isTest": true,
+  "cleanup": "kept",
+  "stuckNotes": [],
+  "coldStartMs": 13275,
+  "model": "claude-opus-5-5",
+  "endTag": "finished"
+}

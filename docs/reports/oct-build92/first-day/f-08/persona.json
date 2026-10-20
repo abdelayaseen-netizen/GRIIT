@@ -1,0 +1,20 @@
+{
+  "gender": "woman",
+  "tech": "med",
+  "patience": 3,
+  "phone": "small",
+  "textSize": "default",
+  "motivation": "curious",
+  "english": "native",
+  "fresh": true,
+  "id": "f-08",
+  "name": "Helen",
+  "age": 40,
+  "background": "Christian mom. Morning devotional before the kids wake up.",
+  "why": "Wants a quiet morning habit.",
+  "goals": [
+    "Pick a quiet morning challenge and finish today's task."
+  ],
+  "chunk": "first-day",
+  "group": "first-day"
+}

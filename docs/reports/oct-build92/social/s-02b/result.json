@@ -1,0 +1,79 @@
+{
+  "personaId": "s-02b",
+  "group": "social",
+  "chunk": "social",
+  "startedOn": "home",
+  "freshStartOk": null,
+  "earlyStopsRefused": 3,
+  "doneTimings": [],
+  "interview": {
+    "secured": "The app never explained \"Day secured\" to me on the screens I saw, so I can only guess it means today's task is marked done, but I can't say for sure.",
+    "freeze": "The app never showed me what a freeze is, so I don't know; I never saw that word explained.",
+    "selfReported": "On the Read task screen, it means I just tell the app I did it and it marks today done, with no photo, camera, time window, or location check, and my challenge shows it without a photo.",
+    "tomorrow": "6 - The challenge with Dana is simple and the Done button is easy, but the walk challenge having a Read task is confusing and a few terms were never explained.",
+    "securedRight": false,
+    "freezeRight": false,
+    "selfReportedRight": true,
+    "asked": true
+  },
+  "mode": "goal",
+  "startedAt": "2026-10-20T03:51:38.754Z",
+  "endedAt": "2026-10-20T04:04:24.803Z",
+  "steps": 60,
+  "durationSec": 766,
+  "goals": [
+    {
+      "id": "s-02b-g1",
+      "text": "The invite opened Dana's challenge: accept it and join. Then find Dana's proof post on the challenge or in the feed. Like it, double-tap the photo, and leave a one-line comment. Then tap Dana's name to open the profile.",
+      "kind": "observed",
+      "pass": true,
+      "detail": "seen on screen"
+    }
+  ],
+  "giveUp": "Hit the 60-step cap.",
+  "crashes": [],
+  "errors": [
+    "home: empty model reply",
+    "home: model reply was not valid JSON"
+  ],
+  "deadEnds": [
+    "home: the same screen came up 3 times",
+    "home: the same screen came up 3 times",
+    "home: the same screen came up 3 times",
+    "home: the same screen came up 3 times",
+    "home: the same screen came up 3 times",
+    "home: the same screen came up 3 times",
+    "home: the same screen came up 3 times",
+    "home: the same screen came up 3 times",
+    "home: the same screen came up 3 times",
+    "home: the same screen came up 3 times",
+    "home: the same screen came up 3 times"
+  ],
+  "wrongNumbers": [
+    "Screen said Day 2 of 7. Enrollment day is 1 (stored current_day 1).",
+    "Screen said Day 2 of 7. Enrollment day is 1 (stored current_day 1).",
+    "Screen said Day 2 of 7. Enrollment day is 1 (stored current_day 1).",
+    "Screen said Day 2 of 7. Enrollment day is 1 (stored current_day 1).",
+    "Screen said Day 2 of 7. Enrollment day is 1 (stored current_day 1).",
+    "Screen said Day 2 of 7. Enrollment day is 1 (stored current_day 1).",
+    "Screen said Day 2 of 7. Enrollment day is 1 (stored current_day 1).",
+    "Screen said Day 2 of 7. Enrollment day is 1 (stored current_day 1)."
+  ],
+  "funnel": "social",
+  "stages": [
+    "opened",
+    "home",
+    "discover",
+    "joined",
+    "social"
+  ],
+  "device": "GRIIT iPhone 16. Persona phone size was recorded and not applied, because this is the simulator that has the app installed.",
+  "textSizeApplied": "large",
+  "userId": "b1648223-e7d6-4de3-b289-2c5487a46a81",
+  "isTest": true,
+  "cleanup": "kept",
+  "stuckNotes": [],
+  "coldStartMs": 9174,
+  "model": "claude-sonnet-5-5",
+  "endTag": "app bug"
+}

@@ -1,0 +1,10 @@
+{
+  "secured": "The app never showed me the phrase \"Day secured\" on the screen I can see, so I'm guessing it means you've done your daily Show up and the streak is safe for today, but the app didn't explain it.",
+  "freeze": "I used one after missing a day last week and it kept my streak going, but the screens I saw never explained how you earn one or how many you get.",
+  "selfReported": "It's listed next to \"No Days Off · Day 35 of 75\" and I take it to mean you mark the task done yourself with no verification, though the app never spelled that out.",
+  "tomorrow": "8 - I'm on a 33-day streak and Show up is still waiting today, so I'll be back, even though some terms like freeze and secured are unclear.",
+  "securedRight": true,
+  "freezeRight": false,
+  "selfReportedRight": true,
+  "asked": true
+}

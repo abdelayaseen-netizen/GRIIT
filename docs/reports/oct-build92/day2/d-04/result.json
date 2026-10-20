@@ -1,0 +1,72 @@
+{
+  "personaId": "d-04",
+  "group": "day2",
+  "chunk": "day2",
+  "startedOn": "home",
+  "freshStartOk": null,
+  "earlyStopsRefused": 1,
+  "doneTimings": [
+    {
+      "step": 4,
+      "taskLabel": "day-secured",
+      "tappedAt": "2026-10-20T05:16:02.240Z",
+      "toSheetMs": null,
+      "toVisibleMs": 3891,
+      "marker": "1 of 1 done",
+      "choice": ""
+    }
+  ],
+  "interview": {
+    "secured": "\"Day secured\" means every task due today is done, so the day counts toward my streak. The home screen says this directly: \"Secured: every task today is done, so the day counts toward your streak.\"",
+    "freeze": "The screen I'm looking at never explained a freeze. I may have passed a mention of it on the \"What these words mean\" screen, but I can't say what it does from what I've seen here, so I'd only be guessing.",
+    "selfReported": "The screen I'm looking at only shows the label \"Self-reported\" under my task, and I take it to mean I said I did it with no one checking. The app doesn't spell that out here, so that's my inference.",
+    "tomorrow": "7 - I'm 2 days into a 7-day streak and the home screen made it easy to see I'm done for today, so I'd probably return to keep it going. Some of the terms are still unclear to me.",
+    "securedRight": true,
+    "freezeRight": false,
+    "selfReportedRight": false,
+    "asked": true
+  },
+  "mode": "goal",
+  "startedAt": "2026-10-20T05:15:10.760Z",
+  "endedAt": "2026-10-20T05:17:42.105Z",
+  "steps": 16,
+  "durationSec": 151,
+  "goals": [
+    {
+      "id": "d-04-g1",
+      "text": "You joined a challenge in GRIIT on an earlier day and finished that day. Today you open the app again. Do whatever you think you need to do today, and look at your streak. Say in your thought what the app tells you about yesterday.",
+      "kind": "observed",
+      "pass": true,
+      "detail": "seen on screen"
+    }
+  ],
+  "giveUp": "Agent stopped on their own.",
+  "crashes": [],
+  "errors": [
+    "home: empty model reply"
+  ],
+  "deadEnds": [
+    "home: the same screen came up 3 times"
+  ],
+  "wrongNumbers": [
+    "Screen said Day 1 of 7. Enrollment day is 3/2 (stored current_day 3, secured)."
+  ],
+  "funnel": "shared",
+  "stages": [
+    "opened",
+    "home",
+    "discover",
+    "joined",
+    "completed",
+    "shared"
+  ],
+  "device": "GRIIT iPhone 16. Persona phone size was recorded and not applied, because this is the simulator that has the app installed.",
+  "textSizeApplied": "large",
+  "userId": "70abfef2-bfe9-437c-a0af-3a288bca5567",
+  "isTest": true,
+  "cleanup": "kept",
+  "stuckNotes": [],
+  "coldStartMs": 2217,
+  "model": "claude-sonnet-5-5",
+  "endTag": "app bug"
+}

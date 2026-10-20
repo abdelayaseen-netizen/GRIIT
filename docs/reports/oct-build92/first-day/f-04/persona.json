@@ -1,0 +1,20 @@
+{
+  "gender": "unspecified",
+  "tech": "high",
+  "patience": 2,
+  "phone": "small",
+  "textSize": "default",
+  "motivation": "skeptical",
+  "english": "native",
+  "fresh": true,
+  "id": "f-04",
+  "name": "Casey",
+  "age": 23,
+  "background": "Quit three habit apps. Skeptical. Hunting for reasons to leave.",
+  "why": "Checking whether this one is the same as the others.",
+  "goals": [
+    "Look for a catch, but finish the first task before you decide."
+  ],
+  "chunk": "first-day",
+  "group": "first-day"
+}

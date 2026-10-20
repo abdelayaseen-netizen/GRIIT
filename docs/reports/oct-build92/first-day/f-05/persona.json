@@ -1,0 +1,20 @@
+{
+  "gender": "woman",
+  "tech": "med",
+  "patience": 3,
+  "phone": "small",
+  "textSize": "default",
+  "motivation": "curious",
+  "english": "native",
+  "fresh": true,
+  "id": "f-05",
+  "name": "Priya",
+  "age": 27,
+  "background": "Downloaded it because a friend sent a link. Wants to join that friend's challenge.",
+  "why": "The link is the only reason she is here.",
+  "goals": [
+    "Find a way to join a friend's challenge, otherwise join any challenge and finish the first task."
+  ],
+  "chunk": "first-day",
+  "group": "first-day"
+}

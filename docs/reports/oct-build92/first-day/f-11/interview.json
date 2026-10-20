@@ -1,0 +1,10 @@
+{
+  "secured": "It means I finished all my tasks today, so the day counts for my streak.",
+  "freeze": "I don't know, the app never showed or explained the word freeze.",
+  "selfReported": "The app did not explain it; I think it means I just said I walked the steps and nobody checked.",
+  "tomorrow": "6 - I want to keep my 1-day streak and it says see you tomorrow, but I saw a 'Couldn't reach GRIIT' error.",
+  "securedRight": true,
+  "freezeRight": false,
+  "selfReportedRight": false,
+  "asked": true
+}

@@ -9,7 +9,7 @@
 
 ## Build 92 (Oct 19) in one paragraph
 
-Chunks 01–12b in `docs/build92/PROGRESS.md` (07 FAILED on its frame gate only), evidence in `docs/reports/build92.md`: glass foundation behind a flag, one finish flow with Day secured, task inputs and partial logs, posts and likes, share stickers, one server source for every number (`user_stats`), profile and post viewer, short invite links and leaderboard, first day and account, Discover / challenge / Home / feed words, faster app open, stronger test agents, then the pre-ship fixes (post-sheet keyboard, public captions). The overnight agent test on this build is `docs/reports/oct-build92/`.
+Chunks 01–12b in `docs/build92/PROGRESS.md` (07 FAILED on its frame gate only), evidence in `docs/reports/build92.md`: glass foundation behind a flag, one finish flow with Day secured, task inputs and partial logs, posts and likes, share stickers, one server source for every number (`user_stats`), profile and post viewer, short invite links and leaderboard, first day and account, Discover / challenge / Home / feed words, faster app open, stronger test agents, then the pre-ship fixes (post-sheet keyboard, public captions). The overnight agent test on this build is `docs/reports/oct-build92/`: 12 of 12 new users secured Day 1 (build 90: 4 of 13), Day 2 6 of 6, 0 crashes, $6.01; open app findings are `BUGS.md` 35–39.
 
 ## Build 90 (Oct 17) in one paragraph (history)
 

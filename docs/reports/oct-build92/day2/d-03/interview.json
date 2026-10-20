@@ -1,0 +1,10 @@
+{
+  "secured": "A day is secured when you finish every task in the challenge that day, like walking 7,000 steps and posting your proof; the leaderboard counts these secured days since Monday.",
+  "freeze": "The app never clearly explained a freeze to me in what I saw, so I'm not sure; I'd only be guessing that it protects a streak if I miss a day.",
+  "selfReported": "I think it means the app takes my word that I did the task and doesn't verify it automatically, but that's from the 'What these words mean' screen's general idea and I can't recall a precise definition.",
+  "tomorrow": "6 - I like the simple 7K steps challenge and the leaderboard gives me a bit of competition, but the unexplained terms and anonymous-looking names make it feel less personal.",
+  "securedRight": true,
+  "freezeRight": false,
+  "selfReportedRight": true,
+  "asked": true
+}
