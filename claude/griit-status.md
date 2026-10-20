@@ -4,7 +4,7 @@
 **Current branch:** `feat/build92`
 **Build on TestFlight:** EAS iOS production `306056bb`, App Store Connect **build number 92**, commit `aae65af3`, EAS build finished 2026-10-20 01:58 UTC, submission `8a3358e0` finished 02:01 UTC to the internal group "Team (Expo)" only (eas.json). Live-in-group is checked in App Store Connect by Yaseen (no ASC key on this Mac)
 **Backend:** Railway `grit-backend`, `/api/health` → `8ae6ad5` (no backend change since)
-**Harness:** `feat/agent-testers` at `7840dd66` (agents/src/build92.ts, build92-compare.ts)
+**Harness:** `feat/agent-testers` at `05dbffa0` (agents/src/build92.ts, build92-compare.ts)
 **Flags shipped:** `LIQUID_GLASS` off, `EMAIL_OTP` off (build 91 email sign-in), `STRAVA_AUTO_VERIFY` off; no associated domains
 
 ## Build 92 (Oct 19) in one paragraph

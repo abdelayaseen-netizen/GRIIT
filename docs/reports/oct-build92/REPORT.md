@@ -1,6 +1,6 @@
 # Overnight report, build 92, 19–20 Oct 2026
 
-App commit `aae65af3` (About shows it). TestFlight build number 92, internal group "Team (Expo)" (EAS build `306056bb`, submission `8a3358e0` finished 22:01 EDT on 19 Oct). Server `/api/health` commit `8ae6ad5` (no backend change in build 92 after it, so no redeploy). Simulator: GRIIT 16 Pro Max b92, iOS 26.4, Release build of the same commit (a TestFlight binary cannot be installed on a simulator); one simulator booted for the whole run. Harness: `feat/agent-testers` at `7840dd66` (agents/src/build92.ts). Models: Claude Opus for the first-day group, Claude Sonnet for the rest; 60-step cap per session, $60 cost cap. Spend: 6.01 USD, 885 calls, 1773317 in, 116597 out.
+App commit `aae65af3` (About shows it). TestFlight build number 92, internal group "Team (Expo)" (EAS build `306056bb`, submission `8a3358e0` finished 22:01 EDT on 19 Oct). Server `/api/health` commit `8ae6ad5` (no backend change in build 92 after it, so no redeploy). Simulator: GRIIT 16 Pro Max b92, iOS 26.4, Release build of the same commit (a TestFlight binary cannot be installed on a simulator); one simulator booted for the whole run. Harness: `feat/agent-testers` at `7840dd66` for the run, `05dbffa0` after (agents/src/build92.ts). Models: Claude Opus for the first-day group, Claude Sonnet for the rest; 60-step cap per session, $60 cost cap. Spend: 6.01 USD, 885 calls, 1773317 in, 116597 out.
 
 Part 1 (first-day, social, history) ran 21:59–00:59 EDT; part 2 (Day 2, the next calendar day for the part 1 accounts) ran 01:05–01:29 EDT.
 
