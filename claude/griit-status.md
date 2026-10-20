@@ -1,12 +1,17 @@
 # GRIIT — Status of Record
 
-**Last verified:** 2026-10-17 — build 90 shipped (chunk 10 of `docs/build90/`)
-**Current branch:** `feat/build90` (from `feat/build89` at `a375b25a`)
-**Build on TestFlight:** EAS iOS production, App Store Connect **build number 91**, commit `5d3de5bd`, submitted 2026-10-17 19:16 UTC to the internal group "Team (Expo)". The project calls it build 90; the counter reads 91 because a first `eas build` attempt bumped it and then failed on a local-workflow check (see the chunk 10 report).
-**Backend:** Railway `grit-backend`, `/api/health` → `0d36821`
-**Harness:** `feat/agent-testers` at `c616bc72` (agents/src, build 90 fixes)
+**Last verified:** 2026-10-19 — build 92 shipped (chunk 13 of `docs/build92/`)
+**Current branch:** `feat/build92`
+**Build on TestFlight:** EAS iOS production `306056bb`, App Store Connect **build number 92**, commit `aae65af3`, EAS build finished 2026-10-20 01:58 UTC, submission `8a3358e0` finished 02:01 UTC to the internal group "Team (Expo)" only (eas.json). Live-in-group is checked in App Store Connect by Yaseen (no ASC key on this Mac)
+**Backend:** Railway `grit-backend`, `/api/health` → `8ae6ad5` (no backend change since)
+**Harness:** `feat/agent-testers` at `7840dd66` (agents/src/build92.ts, build92-compare.ts)
+**Flags shipped:** `LIQUID_GLASS` off, `EMAIL_OTP` off (build 91 email sign-in), `STRAVA_AUTO_VERIFY` off; no associated domains
 
-## Build 90 (Oct 17) in one paragraph
+## Build 92 (Oct 19) in one paragraph
+
+Chunks 01–12b in `docs/build92/PROGRESS.md` (07 FAILED on its frame gate only), evidence in `docs/reports/build92.md`: glass foundation behind a flag, one finish flow with Day secured, task inputs and partial logs, posts and likes, share stickers, one server source for every number (`user_stats`), profile and post viewer, short invite links and leaderboard, first day and account, Discover / challenge / Home / feed words, faster app open, stronger test agents, then the pre-ship fixes (post-sheet keyboard, public captions). The overnight agent test on this build is `docs/reports/oct-build92/`.
+
+## Build 90 (Oct 17) in one paragraph (history)
 
 Ten chunks, all PASSED in `docs/build90/PROGRESS.md`, evidence in `docs/reports/build90.md`. Speed: a task finish is on screen in under 300 ms and the server confirm went from 3.6 s / 2.9 s to 626 ms / 533 ms (photo / self-reported medians); request bursts after a finish and in sign-up and join were cut (0 × 429). First day: Join sticks, finish opens the first task, an empty Home shows a starter card, onboarding ends on a task, timers have a length and a "Finished early?". Task inputs: workout chips and duration, pace and speed sanity checks with Save anyway, journal word rule client and server, counters cannot finish below target. Posting: a post-or-private sheet after every task, your own post in both feeds, correct share card data, four sticker cards. Links and numbers: every person and challenge name opens the right page; Home, Profile and the challenge page count from one bootstrap payload; is_test accounts hidden from real users. Words: definitions at the moment they happen, "Self-reported" once per screen, greeting never `@user_xxx`. Safety: every public text field moderated server-side with a dodge-proof normalizer; report a comment; journal entries private. Friend loop: visible invite link with Copy and Share, `griit://i/<id>` opens the challenge for another account or a brand-new guest, Discover search by name or code. Strava auto-detect behind `FLAGS.STRAVA_AUTO_VERIFY` (off). SQL for chunks 03, 06, 08, 09 in `docs/sql/build90.sql`, all run by Yaseen Oct 17.
 

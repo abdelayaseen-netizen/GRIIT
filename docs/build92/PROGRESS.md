@@ -17,7 +17,7 @@ Cursor updates this file at the end of each chunk. Only Yaseen changes a status 
 | 11 | Speed: app open and profile | PASSED | 53b47e13 | Release sim medians: cold 3280 → 1459 ms, warm 2927 → 1175 ms (splash on a fixed 1.8 s timer; Home and routing waited on the network). Profile header 12–17 ms. Budget 44–47/min, 0 × 429. 11.3 server thumbnails not done (needs a deploy). Report: docs/reports/build92.md |
 | 12 | Better test agents | PASSED (curse-caption fails on both builds: 2 app must-fixes) | 2fb02fe9 (agents f0e13b96) | Harness on feat/agent-testers. Dry run 3/3 with report, $0.32, full run projected $4–16. Must-fix for build 92: a typed caption leaves no way to post (closing the keyboard closes the post sheet); the post-sheet caption is never word-checked or shown. Needs Yaseen: History seed SQL (docs/sql/build92.sql, chunk 12.4); say whether the caption is public. Report: docs/reports/build92.md |
 | 12b | Build 92 pre-ship fixes | PASSED | 91cdbc70 (code 8ae6ad56, agents d1c4c700) | Post sheet keyboard fixed (Done key, sheet rides the keyboard, outside tap drops the keyboard first); captions public, word-checked, shown in feed / photo / posts list / proof detail, old notes stay private; sticker footer "@handle · GRIIT"; invite count without is_test. Backend deployed 8ae6ad5. No SQL. Agents: repeated screen no longer ends a session (46/60/46 steps, $0.96); two-simulator guard restored. Needs Yaseen: tick Associated Domains on the App ID before chunk 13 (report 12b.6). Report: docs/reports/build92.md |
-| 13 | Ship and overnight test | NOT STARTED | | |
+| 13 | Ship and overnight test | IN PROGRESS | aae65af3 | TestFlight build number 92 (EAS 306056bb), build finished 2026-10-20 01:58 UTC, submitted to "Team (Expo)" 02:01 UTC; overnight test running. |
 
 ## Item log
 (Cursor adds one line per item: `NN.N title: done / not done, sha`)
@@ -90,3 +90,5 @@ Cursor updates this file at the end of each chunk. Only Yaseen changes a status 
 12b.4 Invite landing count without is_test: done, 8ae6ad56 (backend deployed 8ae6ad5)
 12b.5 Agents (repeated screen is a nudge, not an exit; two-simulator guard back; dry run 46/60/46 steps, $0.96): done, d1c4c700
 12b.6 Universal links report (no associated domains, no AASA route; dashboard step for Yaseen): done, report only
+13.0 Before the build (SQL marked RUN, profiles trigger finding, Day 0 of 1 = harness, flags, baselines): done, aae65af3 (agents d179cba9)
+13.2 Ship: done, build number 92, EAS build 306056bb at aae65af3 finished 21:58 EDT Oct 19, submission 8a3358e0 to "Team (Expo)" finished 22:01 EDT; processing in App Store Connect needs Yaseen

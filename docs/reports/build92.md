@@ -1620,7 +1620,7 @@ RUN, Oct 18–19, by Yaseen on production.
 Cause: the `BEFORE UPDATE` trigger `profiles_preserve_server_columns` (`supabase/migrations/20261003040000_profiles_server_columns_secure_day.sql:17-43`).
 Unless `auth.role()` is `service_role`, it copies the old value back into `streak_freezes_remaining`,
 `last_freeze_used_at`, `total_days_secured` (and the subscription / tier columns). The SQL editor runs as `postgres`
-with no JWT, so `auth.role()` is null and the trigger silently kept 1 (the account's freeze from sign-up) and 0. The
+with no JWT, so `auth.role()` is null and the trigger silently kept the row's previous values, 1 and 0. The
 seed's `last_freeze_used_at` was dropped the same way (it was not in the verify query). No policy is involved: RLS
 does not apply to the `postgres` role. Not changed (report only).
 What it means on screen:
@@ -1656,3 +1656,24 @@ redeploy.
 **13.1 greps.** No `griit://i/` in shipped code. "Couldn't save. Tap to try again." is `OPTIMISTIC_SAVE_ERROR`, always
 with `retry: true` (`lib/home-done.ts:25`, `lib/optimistic-home.ts:44`). No exclamation mark in a copy string. No shipped
 file imports `app/dev` (excluded by `.easignore`). Route-name headers: chunk 01.5 tests are in the full run.
+
+### 13.2 Ship
+
+- Build number: `eas.json` has `appVersionSource: remote` and `autoIncrement`; the remote iOS build number was 91, so
+  the build took **92** (no file change; `app.json` has no buildNumber).
+- `ios/` kept out of the upload as in build 90 10.2: moved to `../GRIIT-ios-hold` for `eas build`, moved back after the
+  upload. A config plugin recreated `ios/LiveActivity/LiveActivity.entitlements` during the build, identical to the held
+  copy; it was removed before the move back. `git status` clean after. Archive 518 MB; tracked files are about 450 MB,
+  `ios/` and `node_modules` were not in it.
+- `npx eas-cli build -p ios --profile production --auto-submit --non-interactive --no-wait` at `aae65af3`, first try:
+  EAS build `306056bb-ed8a-45c4-8831-87ec66217f7d`, app version 1.0.0, **build number 92**, started 21:51 EDT, FINISHED
+  2026-10-20 01:58:51 UTC (21:58 EDT). Submission `8a3358e0-9aa0-4e84-aa91-18c248b1b0bc` (submit profile production,
+  groups `["Team (Expo)"]`), FINISHED 02:01:50 UTC (22:01 EDT). BETA TESTERS not touched.
+- TestFlight processing: EAS reports the upload finished; Apple's processing and the build showing in "Team (Expo)" are
+  only visible in App Store Connect, which this Mac has no key for. Needs Yaseen to confirm.
+- About: the Release simulator build of the same commit (`xcodebuild -configuration Release -sdk iphonesimulator`,
+  `/tmp/griit-b92-release-aae65af3.app`) carries `"commit":"aae65af3"` in `EXConstants.bundle/app.config`; the EAS build
+  reports `gitCommitHash` `aae65af3`, which `app.config.js` writes into `extra.commit` from `EAS_BUILD_GIT_COMMIT_HASH`.
+  This Release build is the one the overnight agents run on.
+- `claude/griit-status.md`: build 92 state at the top, build 90 kept as history. `BUGS.md`: updated with the overnight
+  findings (13.3).
